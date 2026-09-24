@@ -483,7 +483,10 @@ button#reset-shifts {
   
   
 }
-
+#yellow-table th:not(th:first-child):hover{
+  cursor: pointer;
+ Color : red !important;
+}
  #yellow-table td:not(td:first-child):active,.week-roster td:nth-child(10):active {
   background: rgb(48, 137, 226);
   color: #fff;
@@ -495,6 +498,20 @@ button#reset-shifts {
 #allowanceTb td {
   border: thin solid;
 }
+.selectedYellowHeader:not(th:first-child,th:last-child)::before {
+  content: "";
+  position: relative;
+  display: inline-block;
+  top: -10px;
+  left: 10px;
+ 
+ 
+  border-style: solid;
+  border-width: 10px;
+  border-color: red transparent transparent transparent;
+
+ }
+ 
 
 #allowanceTb td:last-child {
   text-align: center;
