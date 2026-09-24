@@ -1716,7 +1716,7 @@ getElem("#close-shift-setting").addEventListener("click", closeShiftSettings)
 
 
 function closeShiftSettings() {
-   getElem("#members-box").style.display = "none"
+  // getElem("#members-box").style.display = "none"
    getElem("#shift-settings").style.display = "none"
  
 }
@@ -1880,7 +1880,7 @@ function getSettingOpenAction(event) {
 
 
       case "Version":
-        alert("                                               Version 3.1.0")
+        alert("                                               Version 3.1.1")
         break
          case "Shift Repeats":
             alert("Not added yet")
@@ -2175,8 +2175,13 @@ function importDB() {
   reader.readAsText(file)
   reader.onload = async () =>{
       const newRosterDB = await reader.result
-      
-    rosterDB = JSON.parse(newRosterDB)
+      const db = JSON.parse(newRosterDB)
+      const validateFileDate = Object.keys(db).includes("shifts")
+      if (!validateFileDate) {
+       alert("You selected incorrect file")
+        return
+      }
+    rosterDB = db
     updateDB()
     
   }
@@ -2201,6 +2206,150 @@ function updateDB() {
 
 }
 
+getElem("#shift-settings").addEventListener("mousedown",moveSettingsBlock )
+function moveSettingsBlock(event) {
+const shiftSettings = getElem("#shift-settings");
+formulaResult.value = event.target.tagName
+  if( event.target.tagName !== "DIV" &&
+    event.target.tagName !== "TABLE" &&
+    event.target.tagName !== "TR" &&
+    event.target.tagName !== "TD" &&
+    event.target.tagName !== "TH" 
+  
+  ) return
+ 
+ const startX = event.clientX + 200
+    const startY = event.clientY + 100
+
+    const rect = shiftSettings.getBoundingClientRect();
+
+    const startLeft = rect.left;
+    const startTop = rect.top;
+
+    function moveSettingsBlock(event) {
+
+        const x = startLeft + (event.clientX - startX);
+        const y = startTop + (event.clientY - startY);
+
+        shiftSettings.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function stopMove() {
+        document.removeEventListener("mousemove", moveSettingsBlock);
+        document.removeEventListener("mouseup", stopMove);
+    }
+
+    document.addEventListener("mousemove", moveSettingsBlock);
+    document.addEventListener("mouseup", stopMove);
+  
+
+}
+
+
+//I will do cleanup later 
+getElem("#members-box").addEventListener("mousedown",moveMembersBlock )
+function moveMembersBlock(event) {
+const shiftSettings = getElem("#members-box");
+ 
+ if( event.target.tagName !== "DIV") return
+ 
+
+ const startX = event.clientX +500
+    const startY = event.clientY + 100
+
+    const rect = shiftSettings.getBoundingClientRect();
+
+    const startLeft = rect.left;
+    const startTop = rect.top;
+
+    function moveSettingsBlock(event) {
+
+        const x = startLeft + (event.clientX - startX);
+        const y = startTop + (event.clientY - startY);
+
+        shiftSettings.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function stopMove() {
+        document.removeEventListener("mousemove", moveSettingsBlock);
+        document.removeEventListener("mouseup", stopMove);
+    }
+
+    document.addEventListener("mousemove", moveSettingsBlock);
+    document.addEventListener("mouseup", stopMove);
+  
+
+}
+
+getElem("#unallowed-shift-order-box").addEventListener("mousedown",moveUnallowedShiftBlock )
+function moveUnallowedShiftBlock(event) {
+const unallowedShift = getElem("#unallowed-shift-order-box");
+
+ const startX = event.clientX  + document.body.clientWidth - unallowedShift.clientWidth*2- unallowedShift.clientWidth/2
+  const startY = event.clientY + 100
+ 
+  formulaResult.value = event.target.tagName
+ if (event.target.tagName === "INPUT" || 
+  event.target.tagName === "BUTTON" ||
+event.target.tagName === "SELECT" ||
+event.target.tagName === "TEXTAREA"
+) return
+
+    const rect = unallowedShift.getBoundingClientRect();
+
+    const startLeft = rect.left;
+    const startTop = rect.top;
+
+    function moveSettingsBlock(event) {
+
+        const x = startLeft + (event.clientX - startX);
+        const y = startTop + (event.clientY - startY);
+
+        unallowedShift.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function stopMove() {
+        document.removeEventListener("mousemove", moveSettingsBlock);
+        document.removeEventListener("mouseup", stopMove);
+    }
+
+    document.addEventListener("mousemove", moveSettingsBlock);
+    document.addEventListener("mouseup", stopMove);
+  
+
+}
+
+getElem("#utility-icon").addEventListener("mousedown",moveutilityIconBlock )
+function moveutilityIconBlock(event) {
+const shiftSettings = getElem("#utility-icon");
+ 
+ 
+ const startX = event.clientX  + document.body.clientWidth-shiftSettings.clientWidth*2
+    const startY = event.clientY + 500
+
+    const rect = shiftSettings.getBoundingClientRect();
+
+    const startLeft = rect.left;
+    const startTop = rect.top;
+
+    function moveSettingsBlock(event) {
+
+        const x = startLeft + (event.clientX - startX);
+        const y = startTop + (event.clientY - startY);
+
+        shiftSettings.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function stopMove() {
+        document.removeEventListener("mousemove", moveSettingsBlock);
+        document.removeEventListener("mouseup", stopMove);
+    }
+
+    document.addEventListener("mousemove", moveSettingsBlock);
+    document.addEventListener("mouseup", stopMove);
+  
+
+}
  
 
 function addEmptyRowsAfterWeeks() {
