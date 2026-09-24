@@ -62,20 +62,6 @@ try {
 }
 
 
-splitterBox.addEventListener("click", updateDelimiter)
-
-function updateDelimiter(event) {
-   const splt = event.target
-    
-if (splt.tagName !== "SPAN") return
-  delim.textContent = splt.textContent
-  const tempDelim = splt.textContent == delims[0].textContent ?delims[1].textContent : delims[0].textContent
- 
-  cellValue.value = cellValue.value.replaceAll(tempDelim, splt.textContent)
-  formulaResult.value = formulaResult.value.replaceAll(`${tempDelim}`, `${splt.textContent}`)
-  if(formulaResult.value)
-  copyFormula()
-}
 
 let yellowTable = null; 
 
@@ -110,6 +96,21 @@ addWeekTable()
 const curDate = new Date();
 chosenMonth.textContent = curDate.toLocaleDateString("en-ZA", {month:"long", year:"numeric"})
 
+
+splitterBox.addEventListener("click", updateDelimiter)
+
+function updateDelimiter(event) {
+   const splt = event.target
+    
+if (splt.tagName !== "SPAN") return
+  delim.textContent = splt.textContent
+  const tempDelim = splt.textContent == delims[0].textContent ?delims[1].textContent : delims[0].textContent
+ 
+  cellValue.value = cellValue.value.replaceAll(tempDelim, splt.textContent)
+  formulaResult.value = formulaResult.value.replaceAll(`${tempDelim}`, `${splt.textContent}`)
+  if(formulaResult.value)
+  copyFormula()
+}
 function updateRosterDays() {
   const dayCells = getElems(".day-cell")
   let date = new Date(chosenMonth.textContent)
@@ -149,10 +150,6 @@ function updateRosterDays() {
   }
 
   const activeDays = getElems(".activeDate")
-  const activeDayPos = [...dayCells].findIndex(day => day === activeDays[0])
-  
-  const startCellPos = [...dayCells].indexOf(activeDays[0])
-
   
   const colDays = ["Mon", "Tue","Wed","Thu","Fri","Sat","Sun"]
 
@@ -272,13 +269,16 @@ daysID.forEach( ( id, x) => {
 
 })
   
-updateRanges() 
 
+updateRanges() 
 
 
 } 
 
+
+ 
 function updateRanges() {
+  
   const tables = getElems("table:has(.activeDate)")
   const empRows = getElems(`.week-roster:first-child tr:has(.range)`)
   weekOneStartRowNum = getElem('.week-roster:nth-child(1) .row-number')
@@ -290,8 +290,9 @@ function updateRanges() {
     getElems(`.week-roster:first-child .range`)[e].textContent = cellVal
   }
 
-updateWeekOneRowNo()
-updateWeekSecondRowNo()
+  updateWeekOneRowNo()
+  updateWeekSecondRowNo()
+
  
 }
  
@@ -424,6 +425,7 @@ rosterDB.employees = empl.map(name => {
 rosterDB.weekOneStartRowNo =  getElem('.week-roster:nth-child(1) .row-number').value || 2
 rosterDB.weekTwoStartRowNo =  getElem('.week-roster:nth-child(2) .row-number').value || 19
 
+
  renderNecessaryItems()
 getElems(".dynamic-shift-row").forEach(row => row.remove())
 autoAddSavedEmpls()
@@ -494,9 +496,11 @@ function deleteSavedDB() {
     DB.delete()
 }
 function updateWeekSecondRowNo() {
+
+ 
     const tables = getElems("table:has(.activeDate)")
     const startCellNum = Number(getElem(`.week-roster:nth-child(1) .row-number`).value)
-    const secondCellNum =  Number(getElem(`.week-roster:nth-child(2) .row-number`).value)
+    const secondCellNum =  Number(getElem(`.week-roster:nth-child(2) .row-number`)?.value)
  
   const empRows = getElems(`.week-roster:first-child tr:has(.range)`)
  
@@ -619,14 +623,17 @@ getElem("#next-month").addEventListener("click", getNextMonth)
 getNextMonth()
 getPresMonth()
 function getNextMonth() {
+  
   const newDate = new Date(chosenMonth.textContent)
-
+  
   newDate.setMonth(newDate.getMonth()+1)
   chosenMonth.textContent = newDate.toLocaleDateString("en-ZA", {month:"long", year:"numeric"})
   resetShiftCount()
-clearShiftsBlocks();
-updateRosterDays()
-highlight()
+  clearShiftsBlocks();
+  updateRosterDays()
+  highlight()
+
+
 
  
 }
@@ -785,6 +792,7 @@ function updateTotalHoursTb() {
       }
 
    getElem("#yellow-table").addEventListener("click", getYellowTableFormulas )
+   
  
 }
  
@@ -849,9 +857,7 @@ formulaResult.value = `=(${formula.replace('+','')})*${hr}`
 copyFormula()
 }
 
-function countOneShiftHorizontal() {
-  let cells = cellValue.value.replace(/\D$/,"")
-}
+ 
 
 function getYellowTableFormulas(event) {
   if ( verifyMonth() ) return 
@@ -974,14 +980,13 @@ async function copyFormula() {
 
   try {
     await navigator.clipboard.writeText(formula);
+     formula.select();
   } catch (error) {
-    console.warn("Clipboard API unavailable:", error);
+     formulaResult.select()
+     document.execCommand("copy")
+  
+  
 
-    const copyText = getElem("#copy-text");
-    copyText.value = formula;
-    copyText.select();
-
-    document.execCommand("copy");
   }
 }
 
@@ -1792,7 +1797,7 @@ function getSettingOpenAction(event) {
           target.textContent = "Show Side Icons"
         break;
       case "Copy Text":
-        copySelectedText() 
+        copy() 
         break
        case "Paste Text":
          pasteFromClipboard() 
@@ -1839,10 +1844,12 @@ function getSettingOpenAction(event) {
         .forEach( row1 => row1.style.width = "")
        break
       case "Troubleshoot":
+       
         alert("1. Right click\n 2. Export your settings\n3. Delete your settings. Import your settings")
         break;
-      case "Feedback":
-        alert("Not added yet")
+      case "Add Missing rows":
+          addEmptyRowsAfterWeeks()
+          target.remove()
         break;
        case "Manually Add Shifts":
           getElems("#yellow-table tr  th")
@@ -2189,6 +2196,37 @@ function updateDB() {
 
  
 
+function addEmptyRowsAfterWeeks() {
+  
+  const empTables = getElems(".table-low-weeks-tb")
+  if (!rosterDB.employees) return
+  if ( empTables ) {
+    empTables.forEach(tb =>tb.remove())
+  }
+
+  const wk1RangeNum = Number(getElem('.week-roster tr:last-child .row-number').value)
+  const wk2RangeNum = Number(getElem('.week-roster:nth-child(2) tr .row-number').value)
+
+ if (wk2RangeNum-3 <= wk1RangeNum ) return
+
+
+  let tb = '<table class="table-low-weeks-tb">'
+
+  for( let r = wk1RangeNum; r < wk2RangeNum-3; r++) {
+     tb +=`<tr><td>.</td></tr>`
+
+  }
+      tb+="</table>"
+
+for(let t = 0; t<5; t++ ) {
+  const table = getElems(".week-roster")[t]
+  if (table)
+      table.insertAdjacentHTML("afterend", tb )
+}
+
+  empTables.forEach(tb =>tb.remove())
+
+}
 
 getElem("#view-workers").addEventListener("click", showWorkersBox)
 
@@ -2403,6 +2441,7 @@ function getRandomColor() {
         .padStart(6, '0')
 }
 
+ 
 function getEmployeesTotalHrs() {
 
     const tables = getElems(".week-roster")
@@ -2871,8 +2910,8 @@ const unallowedShiftOrder = getElem("#unallowed-order-shift")
 
 }
 
-function copySelectedText() {
-    const selectedText = window.getSelection().toString();
+async function copy() {
+   const selectedText = window.getSelection().toString();
 
     if (!selectedText) {
         alert("Please highlight some text first.");
@@ -2886,6 +2925,8 @@ function copySelectedText() {
         .catch(error => {
             console.error("Copy failed:", error);
         });
+
+ 
 }
 
 let lastFocusedElement = null;
@@ -2942,10 +2983,13 @@ getElem(".terms-c").onclick = () =>{
 getElem("#random-shifts").addEventListener("click", rosterPeople)
 getElem("#load-shift").addEventListener("click", rosterPeople)
 getElem("#upload-new-btn").addEventListener("click", importDB)
+
 if(rosterDB.shifts) {
   restoreShiftSettingData()
   rosterPeople()
+ 
 
 }
  
+
  
