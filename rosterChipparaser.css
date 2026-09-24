@@ -716,10 +716,11 @@ footer {
   width:fit-content;
   height: fit-content;
   position:absolute;
-  top: 0vh;
-  left: 0vw;
+  top: 20vh;
+  left: 40vw;
+  border-radius: 10px;
 
-  background: rgb(99, 99, 166);
+ background: rgb(162, 132, 121);
 
   padding:30px;
   font-size: 18px;
@@ -727,8 +728,15 @@ footer {
   display: none;
 }
 
- 
-
+#file-uploader span {
+  display: block;
+  text-align: right;
+} 
+#file-uploader button {
+  display: block;
+  margin: 20px auto;
+  background: rgb(94, 208, 175);
+}
 #members-box {
   position: absolute;
   top: 10vh;
