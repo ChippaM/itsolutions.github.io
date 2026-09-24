@@ -656,8 +656,9 @@ footer {
    padding: 10px;
    width: fit-content;
    color: #fff;
-
-   display: none; 
+   cursor: pointer;
+   display: none;
+    
  }
  #shift-settings table {
     width: 100%;
@@ -844,7 +845,8 @@ div:has(.close-btn) {
   border-radius: 50%;
 
   background: rgba(95, 106, 129, 0.267);
-  display: none;
+  display: block;
+  cursor: pointer;
 
 }
 
