@@ -2209,12 +2209,15 @@ function updateDB() {
 getElem("#shift-settings").addEventListener("mousedown",moveSettingsBlock )
 function moveSettingsBlock(event) {
 const shiftSettings = getElem("#shift-settings");
-formulaResult.value = event.target.tagName
+///formulaResult.value = event.target.tagName
   if( event.target.tagName !== "DIV" &&
     event.target.tagName !== "TABLE" &&
     event.target.tagName !== "TR" &&
     event.target.tagName !== "TD" &&
-    event.target.tagName !== "TH" 
+    event.target.tagName !== "TH" &&
+    event.target.tagName !== "SECTION"&&
+    event.target.tagName !== "H2"
+    
   
   ) return
  
