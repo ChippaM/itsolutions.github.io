@@ -1853,23 +1853,15 @@ function getSettingOpenAction(event) {
         break;
        case "Manually Add Shifts":
 
-          getElems("#yellow-table th").forEach(th => {
-  
-                if (!rosterConfig.selectedShift) {
-
-                    if (th.textContent.toLowerCase() === "off") {
-                      th.classList.add("selectedYellowHeader")
-                    }
-
-                }
-
-                })
 
           getElems("#yellow-table tr  th")
             .forEach(cell => { cell.addEventListener("click", getShift) })
-           addShiftsManual()
+            addShiftsManual()
+            
+            
             rosterConfig.stopAddShiftAddition = false 
             target.textContent = "Stop Shifts Additions"
+            getElem("#yellow-table th:nth-child(2)").click()
         break;
         case "Stop Shifts Additions":
            getElems("#yellow-table th")
@@ -2888,13 +2880,15 @@ function addShiftsManual() {
 
 
    //.forEach( cell => cell.addEventListener("click", changeShift));
-    const defaultShift =   {
+    const defaultShift =  
+ 
+    {
         shift:"OFF", 
         shiftNo:'shiftNo'+rosterDB.shifts.length,
         shiftColor:"rgb(65, 221, 125)",
         fontColor: "#000"
     }
-
+ 
    function changeShift(event) {
        const target = event.target 
        if (target.tagName !== "TD" || rosterConfig.stopAddShiftAddition ) return
