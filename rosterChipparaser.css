@@ -845,7 +845,7 @@ div:has(.close-btn) {
   border-radius: 50%;
 
   background: rgba(95, 106, 129, 0.267);
-  display: block;
+  display: none;
   cursor: pointer;
 
 }
