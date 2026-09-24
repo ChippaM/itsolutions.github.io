@@ -1852,6 +1852,19 @@ function getSettingOpenAction(event) {
           target.remove()
         break;
        case "Manually Add Shifts":
+
+          getElems("#yellow-table th").forEach(th => {
+  
+                if (!rosterConfig.selectedShift) {
+
+                    if (th.textContent.toLowerCase() === "off") {
+                      th.classList.add("selectedYellowHeader")
+                    }
+
+                }
+
+                })
+
           getElems("#yellow-table tr  th")
             .forEach(cell => { cell.addEventListener("click", getShift) })
            addShiftsManual()
@@ -1859,7 +1872,8 @@ function getSettingOpenAction(event) {
             target.textContent = "Stop Shifts Additions"
         break;
         case "Stop Shifts Additions":
-      
+           getElems("#yellow-table th")
+           .forEach(th => th.classList.remove("selectedYellowHeader"))
           getElems("#yellow-table tr  th")
             .forEach((cell) => {
           
@@ -1868,6 +1882,7 @@ function getSettingOpenAction(event) {
             })
             target.textContent = "Manually Add Shifts"
               rosterConfig.stopAddShiftAddition = true 
+
               addShiftsManual()
         break;
 
@@ -2788,8 +2803,9 @@ function actionUnallowedShift(event) {
 
 function getShift(event) {
   const target = event.target
-    if ( rosterConfig.stopAddShiftAddition === true ) return 
-  target.classList.add("shift-to-copy")
+  if ( rosterConfig.stopAddShiftAddition === true ) return 
+  
+
 
   const selectedShift = rosterDB.shifts.find( shft => shft.shift === target.textContent )
 
@@ -2808,7 +2824,18 @@ function getShift(event) {
     
     }
       
-         
+
+getElems("#yellow-table th").forEach(th => th.classList.remove("selectedYellowHeader"))
+getElems("#yellow-table th").forEach(th => {
+  
+  if (th.textContent.toLowerCase() === rosterConfig.selectedShift.shift.toLowerCase() ) {
+       th.classList.add("selectedYellowHeader")
+  }
+
+})
+
+
+
 
 }
 
@@ -2816,6 +2843,7 @@ function addShiftsManual() {
   
 
   if ( rosterConfig.stopAddShiftAddition === true ) return 
+
 
   getElems(".week-roster")
    .forEach((table, tbIndex) => {
