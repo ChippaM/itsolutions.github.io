@@ -938,3 +938,9 @@ main > section:nth-child(2) {
  
   justify-self: left;
 }
+
+.table-low-weeks-tb {
+  border:thin solid transparent;
+ 
+
+}
