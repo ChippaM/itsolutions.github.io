@@ -310,16 +310,18 @@
 }
 #splitter-box:has(span) {
    display: inline-block;
+   margin-bottom: 10px;
 }
 .splitter,#delim {
   display: inline-block;
-  width: 10px;
+  
   background: #000;
   margin-left: 5px;
   color: #fff;
 
   text-align: center;
   font-weight: bolder;
+  font-size: 18px;
  
 }
 
@@ -368,6 +370,17 @@ button#reset-shifts {
 
 .splitter {
   cursor: pointer;
+}
+
+.arrow-instruc {
+  text-align: center;
+  display: inline-block;
+ 
+
+  width: 100%;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgb(60, 74, 152)
 }
 .instruction-label {
   display: inline-block;
