@@ -971,3 +971,75 @@ main > section:nth-child(2) {
  
 
 }
+
+#shift-template-box {
+  position: absolute;
+  top: 10vh;
+  left: 20vw;
+
+  width: fit-content;
+  height: fit-content;
+  background: rgb(106, 123, 155);
+
+  padding: 20px;
+  color:#fff;
+  cursor: pointer;
+user-select: none;
+
+border-radius: 10px;
+
+font-size: 15px !important;
+
+display: none;
+
+}
+
+#shift-template-box #import-export {
+  text-align: center;
+}
+
+#import-export {
+  margin-top: 10px;
+}
+#import-export span {
+  width: fit-content;
+  border:thin solid #fff;
+  padding: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  user-select: none;
+
+  font-size: 16px;;
+
+}
+#import-export>span:active {
+  
+  background: linear-gradient( to right, rgb(94, 146, 235), #fff)
+
+}
+
+#use-selected-template {
+  background: #5d80d2;
+}
+#export-template {
+  background: rgb(105, 128, 39)
+}
+
+#import-template {
+  background: rgb(90, 155, 188);
+}
+
+
+#template-name {
+  width: 80%;
+  margin: 10px 0px 10px 10px;
+
+}
+#days-weeks-template {
+
+  width: 100%;
+  height: 20vh;
+  margin: 10px 0;
+  padding: 5px;
+}
+
