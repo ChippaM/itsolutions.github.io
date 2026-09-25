@@ -26,6 +26,7 @@ const employeeValue = getElem("#employee-name")
 const totalNumShiftsPerEmp = getElem("#total-shifts-per-employee")
 const formulaResult = getElem("#result-formula")
 const rangeElems = getClassElem("range")
+const hourLabel = getElem("#hour-label")
 let weekOneStartRowNum = rangeElems[0]
 let weekTwoStartRowNum = rangeElems[(rangeElems.length%6)+1]
 
@@ -44,12 +45,14 @@ try {
     : "";
 
   hours.value = Number(rosterDB.hours) || 9;
-
+  hourLabel.textContent =  hours.value 
   employeeValue.value = Array.isArray(rosterDB.employees)
     ? rosterDB.employees
         .map(({ employee }) => employee)
         .join("\n")
     : "";
+
+
 } catch (error) {
   console.error("Unable to load roster data:", error);
 
@@ -95,6 +98,8 @@ addWeekTable()
 
 const curDate = new Date();
 chosenMonth.textContent = curDate.toLocaleDateString("en-ZA", {month:"long", year:"numeric"})
+
+
 
 
 splitterBox.addEventListener("click", updateDelimiter)
@@ -275,7 +280,25 @@ updateRanges()
 
 } 
 
+hours.addEventListener("input", updateHourLabel) 
 
+function updateHourLabel() {
+
+  if (hours.value > 12) {
+
+    hours.value = 12
+  
+  }
+if (
+      hours.value.trim() === "" ||
+      isNaN(hours.value) 
+
+  ) {
+    hours.value = 12
+  }
+    hourLabel.textContent = hours.value 
+    
+}
  
 function updateRanges() {
   
@@ -1753,8 +1776,8 @@ function getSettingOpenAction(event) {
       case "Save Settings":
         saveSettings()
         break
-      case "Save Template":
-           alert("Not added yet")
+      case "Shift Numbers":
+          getElem("#shift-template-box").style.display = "block"
         break
       case "View Templates":
            alert("Not added yet")
@@ -2262,7 +2285,7 @@ function moveTemplateBlock(event) {
         return;
     }
 
-    formulaResult.value = event.target.tagName;
+   
 
     const rect = templateBox.getBoundingClientRect();
 
