@@ -1013,7 +1013,8 @@ display: none;
 
 }
 #import-export>span:active {
-  
+  display: inline-block;
+
   background: linear-gradient( to right, rgb(94, 146, 235), #fff)
 
 }
@@ -1031,9 +1032,28 @@ display: none;
 
 
 #template-name {
-  width: 80%;
+  width: 60%;
   margin: 10px 0px 10px 10px;
 
+}
+#template-name+span {
+  margin-left: 5px;
+  cursor: pointer;
+  border: thin solid #c7c2c2;
+  padding: 3px;
+  border-radius: 3px;
+}
+#template-name+span:active {
+  display: inline-block;
+  transform: scale(.8);
+}
+#total-shifts-per-employee {
+  padding-left:5px ;
+}
+
+div:has(#total-shifts-per-employee) {
+  margin-bottom: 10px;
+  font-size: 15px;
 }
 #days-weeks-template {
 
@@ -1042,4 +1062,5 @@ display: none;
   margin: 10px 0;
   padding: 5px;
 }
+
 
