@@ -370,7 +370,10 @@ button#reset-shifts {
   cursor: pointer;
 }
 .instruction-label {
+  display: inline-block;
   font-size: small;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
   textarea {
       width: 100%;
@@ -390,6 +393,13 @@ button#reset-shifts {
         
 
     }
+
+#hour-label {
+  display: inline-block;
+  width:20px;
+  text-align: center;
+
+}
     button {
       padding: 5px;
       cursor: pointer;
