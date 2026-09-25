@@ -259,7 +259,7 @@
              
       
            </table>
-           <button type="button" disabled>View Week templates</button>
+           <button type="button" id="view-templates">View templates</button>
            <button id="view-workers" type="button">View Employee Workdays</button>
            <button id="unallowed-shift-order" type="button">View unallowed Shift order</button>
            <button id="save-settings" type="button">Save Settings</button>
@@ -391,6 +391,41 @@
    
    <br>
    <select multiple name="unallowed-order-shift" id="unallowed-order-shift"></select> 
+  </section>
+  <section id="shift-template-box">
+    <div><span class="close-btn close-shifts-template">X</span></div>
+    
+    <h2>Templates for all days, shifts and weeks</h2>
+
+  <label>Template Name <input type="text" id="template-name" maxlength="50"></label>
+  <div >
+    <button type="button">Add Present data as Template</button>
+    <button type="button">Reset</button>
+    <button type="button">Rename Template</button>
+    <button type="button">Delete Template</button>
+    <button type="button">Clear Templates</button>
+  </div>
+  <select id="days-weeks-template" multiple>
+    <option>Template 1</option>
+    <option>Template 2</option>
+    <option>Template 3</option>
+    <option>Template 5</option>
+    <option>Template 6</option>
+    <option>Template 7</option>
+    <option>Template 8</option>
+    <option>Template 9</option>
+    <option>Template 10</option>
+
+  </select>
+
+<div id="import-export">
+      <span id="use-selected-template">Use Selected Template</span>
+      <span id="save-template">Save Settings</span>
+      <span id="export-template">Export Template</span>
+      <span id="import-template">Import Template</span>
+    
+    </div>
+
   </section>
 
 <footer>Developed by Chippa Mathebula &copy; 2026<br> <span class="terms-c">Terms and conditions</span> </footer>
