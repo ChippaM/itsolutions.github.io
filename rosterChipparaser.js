@@ -2248,7 +2248,43 @@ const shiftSettings = getElem("#shift-settings");
 
 }
 
+getElem("#shift-template-box").addEventListener("mousedown", moveTemplateBlock )
+function moveTemplateBlock(event) {
+const templateBox = getElem("#shift-template-box");
+formulaResult.value = event.target.tagName
 
+if (
+  event.target.tagName !== "SECTION" &&
+  event.target.tagName !== "DIV" &&
+  event.target.tagName !== "H2" 
+ ) return 
+ 
+ const startX = event.clientX  + document.body.clientWidth - templateBox.clientWidth*2- templateBox.clientWidth/2
+    const startY = event.clientY + 110 //+ templateBox.clientHeight 
+
+    const rect = templateBox.getBoundingClientRect();
+
+    const startLeft = rect.left;
+    const startTop = rect.top;
+
+    function moveTemplateBlock(event) {
+
+        const x = startLeft + (event.clientX - startX);
+        const y = startTop + (event.clientY - startY);
+
+        templateBox.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function stopMove() {
+        document.removeEventListener("mousemove", moveTemplateBlock);
+        document.removeEventListener("mouseup", stopMove);
+    }
+
+    document.addEventListener("mousemove", moveTemplateBlock);
+    document.addEventListener("mouseup", stopMove);
+  
+
+}
 //I will do cleanup later 
 getElem("#members-box").addEventListener("mousedown",moveMembersBlock )
 function moveMembersBlock(event) {
@@ -2368,7 +2404,10 @@ function addEmptyRowsAfterWeeks() {
 
  if (wk2RangeNum-3 <= wk1RangeNum ) return
 
-
+  if (wk2RangeNum-3 - wk1RangeNum>10 ) {
+    alert("Sorry, limit is 10 rows" )
+    return
+  }
   let tb = '<table class="table-low-weeks-tb">'
 
   for( let r = wk1RangeNum; r < wk2RangeNum-3; r++) {
@@ -3065,8 +3104,128 @@ function addShiftsManual() {
 
 }
 
-  
 
+
+
+getElem("#view-templates").onclick =()=>{
+
+  getElem("#shift-template-box").style.display = "block"
+}
+
+getElem("#shift-template-box").addEventListener("click", updateTemplates )
+
+function updateTemplates(event) {
+  const target = event.target
+if (
+  target.tagName !=="BUTTON"&&
+  target.tagName !=="OPTION"&&
+  target.tagName !=="SPAN"
+
+) return 
+
+  const templateInp = getElem("#template-name")
+  const templateList = getElem("#days-weeks-template")
+ // templateInp.value = target.tagName
+  switch(target.textContent) {
+    case "Add Present data as Template":
+
+      if (!/\w+/g.test(templateInp.value)) {
+        alert("The template name must contain alphanumeric")
+        return  
+      }
+       if (/[^\w-\s,\.]/g.test(templateInp.value)) {
+        alert("Only alphanumeics, underscore _ ,space, common, dot and dash are allowed")
+        return  
+      }
+
+      
+
+   
+       if (templateInp.value.trim()==="") {
+        alert("Template name is required")
+        return
+       }
+
+       
+       
+       if (isTemplateAvailable(templateInp.value.toLowerCase().replace(/\s*/g,''))) {
+
+          alert("The name already exist, please choose a different name.")
+          return
+       }
+ 
+      const len = templateList.options.length 
+      const newTemp = new Option(templateInp.value,templateInp.value )
+      templateList.options[len] = newTemp
+    
+      break
+       case "Reset":
+        templateInp.value =""
+      break
+       case "Rename Template":
+
+       const selectedID = templateList.selectedIndex
+
+
+
+       if (templateList.options.length === 0 ) {
+        alert("There is nothing to rename")
+        return
+       }
+
+       if ( selectedID === -1 ) {
+          alert("You did not selected template name to rename.")
+          return
+       }
+   
+       if (templateInp.value.trim()==="") {
+        alert("Template name is required")
+        return
+       }
+
+       
+       
+       if (isTemplateAvailable(templateInp.value.toLowerCase().replace(/\s*/g,''))) {
+
+          alert("The name already exist, please a different name.")
+          return
+       }
+       templateList.options[selectedID].value = templateInp.value
+       templateList.options[selectedID].textContent = templateInp.value
+   
+      break
+       case "Delete Template":
+        const selectedId = templateList.selectedIndex
+         templateList.options[selectedId].remove()
+      break
+       case "Use Selected Template":
+      break
+       case "Export Template":
+      break
+       case "Save Settings":
+        saveData()
+      break
+      
+      case "Clear Templates":
+        templateList.options.length = 0
+      break
+       case "X":
+        getElem("#shift-template-box").style.display = "none"
+      break
+      default:
+        templateInp.value = target.textContent
+
+  }
+
+  function isTemplateAvailable(tempName) {
+
+      const options = [...templateList.options].map( opt => 
+        opt.value.toLowerCase().replace(/\s*/g, ""))
+     return options.includes(tempName)
+
+  }
+
+}
 
 updateAllowedShifts()
 function updateAllowedShifts() {
@@ -3102,6 +3261,8 @@ async function copy() {
 
  
 }
+
+
 
 let lastFocusedElement = null;
 
