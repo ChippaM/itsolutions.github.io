@@ -259,7 +259,7 @@
              
       
            </table>
-           <button type="button" id="view-templates">View templates</button>
+           <button type="button" id="view-templates">View Templates</button>
            <button id="view-workers" type="button">View Employee Workdays</button>
            <button id="unallowed-shift-order" type="button">View unallowed Shift order</button>
            <button id="save-settings" type="button">Save Settings</button>
@@ -397,12 +397,19 @@
     
     <h2>Templates for all days, shifts and weeks</h2>
 
-  <label>Template Name <input type="text" id="template-name" maxlength="50"></label>
+  <label>Template Name <input type="text" id="template-name" maxlength="50"> <span>Reset</span></label><br>
+  <div>
+    <label>How many shifts one employee is expected to work per month : 
+     <input type="number" value="20" min="10" 
+        max="30" required id="total-shifts-per-employee"
+         maxlength="50">
+    </label>
+  </div>
   <div >
     <button type="button">Add Present data as Template</button>
-    <button type="button">Reset</button>
     <button type="button">Rename Template</button>
     <button type="button">Delete Template</button>
+    <button type="button">Generate Random Template</button>
     <button type="button">Clear Templates</button>
   </div>
   <select id="days-weeks-template" multiple>
