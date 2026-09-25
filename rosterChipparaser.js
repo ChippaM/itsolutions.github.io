@@ -23,7 +23,7 @@ const cellValue = getElem("#cell-number")
 const hours = getElem("#standard-hours")
 const shiftValue = getElem("#shift-values")
 const employeeValue = getElem("#employee-name")
-const totalNumShiftPerEmp = getElem("#total-shifts-per-emp")
+const totalNumShiftsPerEmp = getElem("#total-shifts-per-employee")
 const formulaResult = getElem("#result-formula")
 const rangeElems = getClassElem("range")
 let weekOneStartRowNum = rangeElems[0]
@@ -2247,44 +2247,49 @@ const shiftSettings = getElem("#shift-settings");
   
 
 }
-
-getElem("#shift-template-box").addEventListener("mousedown", moveTemplateBlock )
-function moveTemplateBlock(event) {
-const templateBox = getElem("#shift-template-box");
-formulaResult.value = event.target.tagName
-
-if (
-  event.target.tagName !== "SECTION" &&
-  event.target.tagName !== "DIV" &&
-  event.target.tagName !== "H2" 
- ) return 
  
- const startX = event.clientX  + document.body.clientWidth - templateBox.clientWidth*2- templateBox.clientWidth/2
-    const startY = event.clientY + 110 //+ templateBox.clientHeight 
+const templateBox = getElem("#shift-template-box");
+
+templateBox.addEventListener("mousedown", moveTemplateBlock);
+
+function moveTemplateBlock(event) {
+
+    if (
+        event.target.tagName !== "SECTION" &&
+        event.target.tagName !== "DIV" &&
+        event.target.tagName !== "H2"
+    ) {
+        return;
+    }
+
+    formulaResult.value = event.target.tagName;
 
     const rect = templateBox.getBoundingClientRect();
 
-    const startLeft = rect.left;
-    const startTop = rect.top;
 
-    function moveTemplateBlock(event) {
+    const offsetX = event.clientX - rect.left;
+    const offsetY = event.clientY - rect.top;
 
-        const x = startLeft + (event.clientX - startX);
-        const y = startTop + (event.clientY - startY);
+    function move(event) {
 
-        templateBox.style.transform = `translate(${x}px, ${y}px)`;
+        const x = event.clientX - offsetX - rect.width/2;
+        const y = event.clientY - offsetY -rect.height/2 + 100;
+
+        templateBox.style.transform =
+            `translate(${x}px, ${y}px)`;
     }
 
     function stopMove() {
-        document.removeEventListener("mousemove", moveTemplateBlock);
+
+        document.removeEventListener("mousemove", move);
         document.removeEventListener("mouseup", stopMove);
     }
 
-    document.addEventListener("mousemove", moveTemplateBlock);
+    document.addEventListener("mousemove", move);
     document.addEventListener("mouseup", stopMove);
-  
-
 }
+ 
+
 //I will do cleanup later 
 getElem("#members-box").addEventListener("mousedown",moveMembersBlock )
 function moveMembersBlock(event) {
@@ -3114,6 +3119,24 @@ getElem("#view-templates").onclick =()=>{
 
 getElem("#shift-template-box").addEventListener("click", updateTemplates )
 
+totalNumShiftsPerEmp.oninput = () => {
+  if (totalNumShiftsPerEmp.value.length > 2) {
+    totalNumShiftsPerEmp.value = 20
+  }
+}
+
+totalNumShiftsPerEmp.onchange =()=>{
+   
+  if (totalNumShiftsPerEmp.value > 9 && totalNumShiftsPerEmp.value < 30 ) {
+
+    return
+  } else {
+
+    totalNumShiftsPerEmp.value = 20
+  }
+
+}
+
 function updateTemplates(event) {
   const target = event.target
 if (
@@ -3208,6 +3231,9 @@ if (
       
       case "Clear Templates":
         templateList.options.length = 0
+      break
+      case "Generate Random Template":
+        alert("Not added yet")
       break
        case "X":
         getElem("#shift-template-box").style.display = "none"
