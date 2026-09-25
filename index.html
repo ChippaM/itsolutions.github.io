@@ -101,7 +101,7 @@
         </table>
 
         <div id="shift-box" >
-          <span class="instruction-label">Enter shifts (one shift per line)</span>
+          <span class="instruction-label">Enter all <b id="hour-label"> 9 </b> hours shifts (One shift per line)</span>
           <span class="required">*</span><br>
 
           <textarea id="shift-values" maxlength="200"></textarea>
@@ -112,7 +112,7 @@
          <legend><span class="instruction-label"> Include employees (Required)</span> </legend>
         <div id="employee-box">
 
-          <span class="instruction-label"> Enter employee names (One employee name per line)</span><span class="required">*</span><br>
+          <span class="instruction-label"> Enter all employee names (One employee name per line)</span><span class="required">*</span><br>
           <textarea id="employee-name" maxlength="400"></textarea>
           <label style="display:none">Total number of shifts per employee: <input type="number" min="1" value="20" id="total-shifts-per-emp" disabled title="Disabled for now."></label>
         </div>
@@ -197,8 +197,8 @@
           <li>Save Settings</li>
           <li> Templates >
             <ul>
-              <li>Shift Repeats</li>
-              <li></li>
+              <li>Shift Numbers</li>
+              <li>Employee Workdays</li>
             </ul>
 
           </li>
@@ -395,13 +395,13 @@
   <section id="shift-template-box">
     <div><span class="close-btn close-shifts-template">X</span></div>
     
-    <h2>Templates for all days, shifts and weeks</h2>
+    <h2>Templates for all shifts, days and weeks</h2>
 
   <label>Template Name <input type="text" id="template-name" maxlength="50"> <span>Reset</span></label><br>
   <div>
     <label>How many shifts one employee is expected to work per month : 
      <input type="number" value="20" min="10" 
-        max="30" required id="total-shifts-per-employee"
+        max="28" required id="total-shifts-per-employee"
          maxlength="50">
     </label>
   </div>
