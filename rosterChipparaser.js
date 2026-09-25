@@ -1163,10 +1163,13 @@ getElem("main").addEventListener("contextmenu",repositionSettings)
 getElem("main").addEventListener("click",closeSettingsBox)
 
 function repositionSettings(event) {
-
-  getElem("#settings-option").style.display = "block"
-  getElem("#settings-option").style.left = `${event.clientX-20}px`;
-  getElem("#settings-option").style.top = `${event.clientY-20}px`;
+ 
+  const menu =  getElem("#settings-option") 
+  const xW = event.pageX - 100
+  const xH = event.pageY - 30
+  menu.style.display = "block"
+  menu.style.left = `${xW}px`;
+  menu.style.top = `${xH}px`;
 
 
    getElem("#shift-settings").style.display = "none"
