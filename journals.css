@@ -1,0 +1,534 @@
+ *{
+            margin:0;
+            padding:0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1em;
+        }
+        :root{
+            --bdyBgColor: #000;
+            --bdyBgfontColor: #b33c3c;
+            --fontColor1: #000;
+            --secBgColor:rgba(78, 77, 77, 0.6);
+            --secFontColor:rgb(197, 176, 176);
+        }
+        body {
+            background:url("./gallery/appResources/bgf.png");
+            background-position: -10px -80px;
+            width: 100vw;
+            overflow-X:hidden;
+          
+        }
+      
+        h1{
+            text-align: center;
+            font-size: 1.5rem;
+            color:rgb(123, 101, 101)
+        }
+       main> main{
+            width: 100vw;
+    
+            padding:5px;
+        }
+        main>section{
+            display: inline-block;
+            width:75%;
+            vertical-align: top;
+            background:rgba(196, 188, 188, 0.2);
+            color:#fff;
+            padding:5px;
+            min-width: 400px;
+        }
+        table:first-child{
+            min-width:20vw;
+            float:left;
+        }
+        main>aside{
+            float: right;
+            width:25%;
+        }
+        fieldset{
+            border:none;
+        }
+        legend{
+            float: right;
+
+        }
+        legend span {
+            display: inline-block;
+            border:thin solid #010e0e;
+            padding:0 5px;
+
+        }
+      
+        #new-category-div{
+           width:100%; 
+           display: none;
+        }
+        #new-category-div input{
+            padding:0 5px; 
+            text-transform: capitalize;
+        }
+
+        button[id$="-record"] {
+            padding: 5px 10px;
+        }
+
+        #new-category-div span{
+            Padding-left:10px;
+            font-family: sans-serif;
+            user-select: none;
+            color:rgb(245, 82, 82);
+            font-weight: bolder;
+            font-size:1.2em;
+            cursor:pointer;
+            transition: all .4ms ease-in-out 0s;
+            display: inline-block;
+            
+        }
+        #new-category-div span:active{
+            transform:scale(.8);
+        }
+       body>main section table td:nth-child(2)>*{
+            width:100%;
+            outline:none;
+            
+        }
+        div:has(#user-notification){
+            width:fit-content;
+            background:#e2e2e2;
+            padding:5px;
+            border-radius:3px;
+        }
+        #user-notification{
+            color:rgb(124, 72, 26);
+            font-weight:bold;
+        }
+       
+     aside{ flex:0;
+        border:thin solid;
+        height: fit-content;
+        background:#fff;
+        min-height: 80vh;
+        transition: all .3ms ease-in-out 0s;
+
+      }
+   
+
+      #records-list{
+        max-height: 70vh;
+        overflow: auto;
+        padding:10px;
+      }
+    
+    textarea{
+            width: 100%;
+            min-height:50vh;
+            max-height: 70vh;
+            min-width: 20vw;
+            caret-color: rgb(11, 11, 211);
+            caret-shape:bar;
+            padding:5px;
+            background:#dcdcc8;
+        
+        }
+        #records-list-box{
+            padding:10px;
+            overflow: auto;
+            max-height: 70vh;
+            scroll-behavior: smooth;
+        }
+        #records-list-box table.existing-records{
+            border-collapse:collapse;
+            width:100%;
+            max-width: 500px;
+            height: 100px;
+            max-height: 100px;
+            border-style:dashed;
+            border-width:1px;
+            border-color: orange orange orange transparent;
+            border-radius: 5px;
+            box-shadow: 7px 10px 8px rgb(92, 91, 91);
+            margin-bottom: 20px;
+            background:#fff;
+            margin:20px auto;
+
+        }
+        table.existing-records td{
+            padding:5px;
+        }
+      
+        .creation-record-date{
+         width: fit-content;
+         border:thin solid;
+         float:right;
+         padding:0 5px 0 5px;
+         font-size: 1em;
+         background:#19a3d6;
+         color:#fff;
+         white-space: nowrap;
+        }
+        .record-title{
+            text-transform: capitalize;
+        }
+          td:has(.record-category){
+            writing-mode:sideways-lr;
+            background-color:orange;
+            text-align: center;
+            border-radius: 5px 0 0 5px;
+            text-transform: capitalize;
+            font-weight: bold;
+            width: 40px;
+        }
+        td:has(.record-body) ::-webkit-scrollbar{
+            display: none;
+        }
+
+        td:has(.record-body) {
+            
+
+        }
+        .record-body {
+            max-height: 100px;
+            width: 300px;
+            overflow:hidden;
+            display: block;
+            word-break: keep-all;
+            text-overflow: ellipsis;
+          }
+      
+        #download-icon img{
+            width:50px;
+            height: 25px;
+            float:right;
+            cursor: pointer;
+            transition: all .3s ease-in-out 0s;
+        }
+        #download-icon img:active{
+            transform:translateY(20px);
+        }
+        .due-date-countdown{
+            display: block;
+            width:fit-content;
+            padding:2px 10px;
+            text-align: center;
+            background:red;
+            color:#fff;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            border-left:5px solid #24f919;
+            
+
+        }
+        legend span{
+            font-family: "Segoe UI", sans-serif;
+            cursor: pointer;
+            color:#000;
+            vertical-align: middle;
+        }
+        legend #import-sp{
+            background:rgb(167, 236, 208);
+        }
+        legend #export-sp{
+            background:rgb(225, 209, 87);
+        }
+        legend #delete-all-sp{
+            background:rgb(246, 43, 77);
+            color:#fff;
+        }
+        table button {
+            width:fit-content;
+            padding:0 10px;
+            cursor: pointer;
+            color:#070707;
+           
+        }
+        button:disabled{
+            cursor:not-allowed;
+        }
+        #browser-file-box{
+            background:rgb(152, 173, 167);
+            padding:5px;
+            position: absolute;
+            top:0;
+            left:20%;
+            cursor: pointer;
+            border-radius: 5px;
+            display: none;
+           
+        }
+      #browser-file-box span{
+            color:rgb(201, 73, 73);
+            font-weight:bolder;
+            padding:20px;
+            font-size:larger;
+         }
+        canvas{
+            display: block;
+            margin:0 auto;
+            border:thin solid;
+            width:100%;
+            height: 200px;
+        
+        }
+       
+       #current-datetime-sp{
+        background:#c6c5c2;
+        display: inline-block;
+        width:100%;
+        color:#000;
+        padding-left:5px;   
+    }
+    #notification-box{
+        color:#fff;
+        float:right;
+        vertical-align: center;
+        height: 35vh;
+        width:30vw;
+        margin-left: 10px;
+  
+    }
+     #notification-box ul{
+        height: 25vh;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+     }
+     #notification-box aside{
+        display: flex;
+        flex-flow:row nowrap;
+        background: none;
+        gap:10px;
+         border: none;
+
+     }
+      #notification-box aside div{
+       width:50%;
+
+      }
+      #notification-box aside div:last-child{
+          color:rgb(201, 151, 195);
+   
+          padding-left:10px;
+        }
+    #notification-box aside div:last-child li{
+        background:rgb(80, 116, 81);
+    }
+ 
+    #notification-box ul li{
+        background:rgba(246, 42, 42, 0.4);
+        margin-bottom: 5px;
+        color:#fcf9f9;
+        padding-left:5px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-family: "Segoe UI", 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-transform: capitalize;
+        list-style-type:none;
+    }
+    #notification-icon{
+        width:45px;
+        aspect-ratio: 1;
+        cursor: pointer;
+        transition: all .3s ease 0s;
+      
+        
+    }
+    #notification-icon:active{
+        zoom:.9;
+    }
+    .bell-shake{
+        animation: shakeBell .4s ease-in-out 0s infinite alternate-reverse;
+    }
+
+    @keyframes shakeBell{
+
+        0%{
+            transform: rotate(00deg);
+        }
+        100%{
+            transform: rotate(20deg);
+        }
+        
+    }
+    #notification-icon:active{
+        transform: rotate(20deg);
+    }
+    #notifications-count{
+        display: inline-block;
+        position: relative;
+        top: -28px;
+        left: -22px;
+        border-radius: 50%;
+        border:thin solid #fff;
+        background:#313441;
+        padding:2px;
+        width:25px;
+       aspect-ratio: 1;
+        font-size: 14px;
+        cursor: pointer;
+        text-align: center;
+
+    }
+    h4{
+        text-align: center;
+        font-size:15px;
+        font-weight: 800;
+        text-transform: capitalize;
+        width:100%;
+        border-bottom:2px dashed rgb(231, 224, 224);
+    }
+    footer{
+      text-align: center;
+      color:#938f8f;
+        }
+   
+    .favorite-icon{
+        width:30px;
+        height: 20px;
+        position: relative;
+        cursor: pointer;
+        float: right; 
+        margin-right:2%; 
+    }
+    
+    #picture-frame{
+        position: absolute;
+        top:2%;
+        left:15vw;
+        background:rgb(219, 201, 212);
+        width:60vw;
+        min-width: 500px;
+        height: 90vh;
+        border-radius:10px; 
+        display: block;
+        overflow: hidden;
+        background:rgb(237, 238, 238);
+        display: none;
+
+    }
+   #picture-frame table{
+    width:100%;
+    height: 100%;
+
+   }
+  #picture-frame tr td {
+    overflow: auto;
+     
+  }
+ #picture-frame :is(table, tr, td) {
+    border: thin solid #b2cbb5;
+    border-collapse:collapse;
+    vertical-align: top;
+    padding:5px;
+}
+#picture-frame tr:first-child td:first-child{
+    width:10vw;
+    height: 2vh;
+}
+#picture-frame tr:nth-child(2) {
+    height: 2vh;
+}
+
+#gallery-list li{
+    list-style-position: inside;
+    cursor: pointer;
+    color:#967c7c;
+    white-space: nowrap;
+    word-break: keep-all;
+    transition: all .3s ease 0s;
+}
+
+td#gallery-display {
+   display: flex;
+   flex-flow: row nowrap;
+   justify-self: start;
+   align-items: top;
+
+   gap: 10px;
+   overflow: auto;
+ 
+
+   height: 80vh;
+   width:50vw;
+    
+
+   cursor: pointer;
+
+
+    
+}
+td#gallery-display img {
+    width: 90%;
+    height: 80vh;
+    align-self: top;
+    vertical-align: top;
+    place-items: top;
+    padding: 0;
+}
+td#gallery-display >div {
+    width: 10%;
+    vertical-align: top;
+    align-items: flex-start;
+    
+    display: flex;
+    flex-flow: column nowrap;
+
+}
+#img-control-box{
+  display: flex;
+  flex-direction: column;
+  width:200px;
+  gap:10px;
+  text-align: start;
+  font-weight: bolder;
+  cursor: pointer;
+}
+#img-control-box span:active{
+   text-decoration: underline;
+   font-size: 14px;
+   user-select: none;
+   
+}
+#image-file {
+    appearance: none;
+
+    border:thin solid rgb(217, 204, 204);
+    
+    text-align: center;
+    height: 10vh;
+
+    background:#fff;
+
+    border-radius: 10px;
+    box-shadow: 5px 8px 8px grey inset, -5px -8px 8px rgb(203, 200, 200) inset;
+
+    
+    padding:5px;
+    margin: 10px;
+}
+ 
+[for="image-upload"] h5{
+  font-size: 1.1em;
+  color:rgb(62, 119, 143);
+  text-transform: capitalize;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+#close-gallery{
+    float:right;
+    width:20px;
+    height:20px;
+    font-weight: bolder;
+    margin-right:1%;
+    border-radius: 50%;
+    background:#f00;
+    color:#fff;
+    text-align: center;
+    cursor:pointer;
+}
+
+
+
+.file-type {
+    text-decoration: underline;
+    color:rgb(130, 43, 223);
+    font-weight: bold;
+}
