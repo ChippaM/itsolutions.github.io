@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journals</title>
+<link href="journals.css" type="text/css"rel="stylesheet">
+</head>
+<body>
+    <h1>New Journals</h1>
+</svg>
+</h1>
+    <main>
+        <section>
+            <fieldset>
+             <legend>
+                 <span id="import-sp">Import</span>
+                 <span id="export-sp">Export</span>
+                <span id="delete-all-sp">Delete all records</span>
+            </legend>
+            <section id="notification-box">
+                <img src="./gallery/appResources/bellRing.png" id="notification-icon"><span id="notifications-count">0</span>
+                
+             
+                <aside>
+                    <div>
+                        <h4>Dued records ( <span id="dued-records-count">0</span> )</h4>
+                        <ul id="due-record-box"></ul>
+                    </div>
+                    <div>
+                        <h4>Favorites ( <span id="favorite-record-count">0</span> )</h4>
+                        <ul id="favorite-box"></ul>
+                    </div>
+                </aside>
+
+             
+
+            </section>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>Search</td>
+                            <td><input type="search" name="search-inp" id="search-inp"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="journal-creation-date">DateTime (For Filter)</label> </td>
+                            <td>
+                                <input type="datetime-local" id="journal-creation-date">
+                            </td>
+                        </tr>
+                          <tr>
+                            <td><label for="last-updatedOn-Inp">Last updated on (Filter by date)</label> </td>
+                            <td>
+                                <input type="datetime-local" id="last-updatedOn-Inp">
+                            </td>
+                        </tr>
+                           <tr>
+                            <td><label>Current DateTime</label></td>
+                            <td><span id="current-datetime-sp"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="due-date-inp">Due date</label>
+                                <label style="color:rgb(187, 112, 69);font-weight: bolder;accent-color: rgb(219, 244, 214);"> 
+                                    ( Allow Due Date <input type="checkbox" checked id="enableDueDateChkbox" 
+                                    onchange="this.parentElement.parentElement.nextElementSibling.childNodes[0].disabled 
+                                    = !this.checked"> )
+                                </label>
+                            </td>
+
+                            <td><input type="datetime-local" id="due-date-inp"></td>
+                        </tr>
+                        <tr>
+                            <td>Category</td>
+                            <td>
+                                <select id="category-list"></select>
+                        
+                                <div id="new-category-div"><input type="text" maxlength="9" id="new-category-inp"><span>X</span></div>
+                            </td>
+                        </tr>
+                        <tr style="display: none;">
+                            <td>Record ID</td>
+                            <td> <input type="text" readonly value="" disabled id="hidden-inp"></td>
+                        </tr>
+                        <tr>
+                            <td>Gallery</td>
+                            <td><button onclick="openGalleryWindow()" id="show-gallery-btn">View 0 images</button></td>
+                        </tr>
+                      
+                    </tbody>
+                </table>
+                <div colspan="2">.<span id="user-notification"></span></div>
+                 
+                
+            <textarea id="journal-box" type="text" spellcheck="true"> Title :</textarea>
+            <button id="add-new-record">Add</button>
+            <button id="reset-record">Reset</button>
+            <button id="update-record">Update</button>
+            <button id="delete-record">Delete</button>
+            </fieldset>
+
+        </section>
+        <aside>
+            Records: <span id="record-count"></span>
+            <canvas></canvas>
+
+            <div id="records-list-box"></div>
+        </aside>
+    </main>
+    <section id="picture-frame">
+       <form action="#" name="attachment">
+       <table>
+          <tr>
+            <td>Gallery</td>
+            <td>
+         
+                <div><span id="close-gallery" 
+                    onclick="this.parentElement.
+                    parentElement.parentElement.
+                    parentElement.parentElement
+                    .parentElement.parentElement
+                    .style.display = 'none'">X</span>
+                </div>
+                
+                <label for="image-file">
+                   <h5> Upload/Drop attachment from gallery</h5>
+                   <input type="file" id="image-file">
+                </label><br>
+                <label>Attachment name <input type="text" maxlength="20" id="picture-label"></label>
+                <button type="button" id="update-image-btn">Upload new image</button>
+                <input type="reset" value="Reset"  
+                onclick="this.previousElementSibling.textContent='Upload new image';">
+                 <input text="text" id="image-hidden-inp" hidden >
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">Note: <span id="image-alert"></span> </td>
+            
+          </tr>
+          <tr>
+            <td>
+                <h5>uploadImage</h5>
+                <ol id="gallery-list"></ol>
+            </td>
+            <td id="gallery-display">
+           
+            </td>
+          </tr>
+       </table>
+    </form> 
+    </section>
+  
+    <div id="browser-file-box">
+        <label>Search <input type="file" id="file-to-import"></label>
+        <button id="import-btn">Upload</button>
+        <span onclick="this.parentElement.style.display='none'">X</span>
+    </div>
+   <footer>Developed by Chippa Mathebula &copy;2026</footer>
+
+<script>
+    
+        let recordDB = []
+        const tempSetting = {}
+        const get = {
+            elemId:(eleId) => document.getElementById(eleId),
+            elems:(eleId) => document.querySelectorAll(eleId),
+            elem:(eleId) => document.querySelector(eleId),
+        }
+
+        const getElem = ele => document.querySelector(ele)
+
+         const DB = {
+                get: () => JSON.parse(localStorage.getItem("jrnalDB")) || [],
+                save: () => localStorage.setItem("jrnalDB", JSON.stringify(recordDB))
+          };
+       
+        if (localStorage.hasOwnProperty("jrnalDB")) {
+            try {
+                recordDB = DB.get()
+           
+               
+            }catch(err){
+                recordDB = []
+                console.log(err)
+            }
+        }
+
+       
+
+        const bgColors = [
+            "#FFB3BA", // light pink
+            "#E6F0FF", // soft light blue
+            "#FFDFBA", // light peach
+            "#E3F9E5", // mint green
+            "#F8F8FF", // ghost white
+            "#FFFFBA", // light yellow
+            "#BAFFC9", // light green
+            "#BAE1FF", // light blue
+            "#E6E6FA", // lavender
+            "#FFFACD",  // lemon chiffon
+            "#F5F5DC", // beige
+            "#FADADD", // pale pink
+            "#D4F1F9", // light cyan
+            "#FFF5BA", // soft cream
+            "#F0E68C", // khaki light
+            "#F5DEB3", // wheat
+            "#FFE4E1", // misty rose
+            "#E0FFFF", // light cyan
+            "#FFF0F5", // lavender blush
+            "#FAFAD2", // light goldenrod
+            "#F0FFF0", // honeydew
+            "#E6FFE6", // very light green
+];
+    
+         
+        const searchInp = get.elemId("search-inp")
+        const dateTimeInp = get.elemId("journal-creation-date")
+        const lastUpdatedOnInp = get.elemId("last-updatedOn-Inp") 
+        const dueDateInp = get.elemId("due-date-inp")
+        const categorySel = get.elemId("category-list")
+        const journalBodyInp = get.elemId("journal-box")
+        const addNewRecordBtn = get.elemId("add-new-record")
+        const resetFieldBtn = get.elemId("reset-record")
+        const updateRecordBtn = get.elemId("update-record")
+        const deleteRecordBtn = get.elemId("delete-record")
+        const recordBox = get.elemId("records-list-box")
+        const userAlert = get.elemId("user-notification")
+        const recordCount = get.elemId("record-count")
+        const hiddenInp = get.elemId("hidden-inp")
+        const recordsBox = get.elemId('records-list-box')
+        const enabledDueDateChkbx = get.elemId("enableDueDateChkbox")
+        addNewRecordBtn.addEventListener("click", addNewRecord)
+        const imageFeedback = get.elemId("image-alert")
+        let tempCategInp = get.elemId("new-category-inp")
+        const pictureFrame = get.elemId("gallery-display")
+        const fileImage = get.elemId("image-file")
+        const pictureLabel = get.elemId("picture-label")
+        const imageHiddenInp = get.elemId("image-hidden-inp")
+         let imageDelInterval = null
+         let recordDelInterval = null
+         let deleteAllInterval = null 
+
+        
+        let zoomUnit = 100
+        let curDate = secondsToDate(Date.now())
+            dateTimeInp.value = curDate
+        
+        renderCategories()
+        renderRecords()
+        function renderCategories() {
+         
+           const uniqueCate = [...new Set(recordDB.map(({category}) => category ))]
+           .sort((a, b)=>a.localeCompare(b))
+           categorySel.length = 0 
+    
+           for(let u = 0; u <= uniqueCate.length; u++) {
+
+               let nextCateg = uniqueCate[u]
+               if (u == uniqueCate.length  )
+                   nextCateg = "Not found"
+               const newItem = new Option(nextCateg,nextCateg) 
+               const len = categorySel.length
+               categorySel.options[len] = newItem
+           }
+        
+
+        }
+        function addNewRecord() {
+            
+            if (!journalBodyInp.value.replace(/title|\s*:\s*|\s*/gi,'')) {
+                userAlert.textContent = "There is nothing to Add."
+                clearAlert()
+                return
+            }
+            
+            const tempCateg = tempCategInp.value
+                        .trim()
+                        .toLowerCase()
+                        .replace(/^[a-z]/i, c => c.toUpperCase());
+
+            if ( categorySel.value == "Not found"
+                 && (tempCategInp.value.length<3) ) {
+                userAlert.textContent = 'Category name must be at least contain 3 letters.'
+                return
+            }else if (/no.*foun|no.*matc/i.test(tempCategInp.value)){
+                userAlert.textContent = "The category name is not allowed."
+                return 
+
+            }else if (!(tempCategInp.value||'').trim() && categorySel.value == "Not found" ) {
+                userAlert.textContent = "Category Field cannot be empty."
+                return
+
+            }
+
+          if(journalBodyInp.value.replace(/\s*/g,'').length >= 10000){
+                userAlert.textContent = 'Record body has been set to take less than 10 000 characters.' 
+                return
+            }
+
+            const newRecord = {
+                id:Date.now(),
+                lastUpdatedOn:Date.now(),
+                category:categorySel.value.includes('Not found')?tempCateg:categorySel.value,
+                isDueDateEnabled: enabledDueDateChkbx.checked,
+                recordDueDate:dueDateInp.value,
+                recordBody: journalBodyInp.value,
+                favored:false 
+            }
+            
+            const normalized = newRecord.recordBody.replace(/\s+/g,'').toLowerCase();
+
+            const isDuplicate = recordDB.some(journal =>
+              (journal.recordBody ?? '').replace(/\s+/g,'').toLowerCase() === normalized
+            );
+
+            if (isDuplicate) {
+                userAlert.textContent = 'Content already exist.'
+                return
+            }
+            if (validateDueDate() == "Invalid") return
+            recordDB.push(newRecord)
+          
+            DB.save()
+
+            renderRecords(recordDB)
+
+            recordCount.textContent = recordDB.length
+            recordsBox.scrollTop = recordBox.scrollHeight
+            enableBtns()
+            userAlert.textContent = 'Record is successfully added.'
+
+            const selectedCategory = recordDB.find(({id})=> id == hiddenInp.value)?.category
+        
+            setTimeout(function(){ userAlert.textContent = ''},3000)
+            recordBox.scrollTop = recordBox.scrollHeight 
+            renderCategories()
+            removeNewCategoryInp()
+            retrieveRecord(recordDB[recordDB.length - 1].id)
+            userAlert.textContent = "A new record has been added successfully."
+        }
+       
+        function validateDueDate() {
+          let dueDateStatus = null
+          if (categorySel.value == "Reminder" && !dueDateInp.value ) {
+                userAlert.textContent = "Due date is required."
+                dueDateStatus = "Invalid"
+                return dueDateStatus
+            }
+
+          const dateDate = Date.now()
+          const dueDate = new Date(dueDateInp.value).getTime()
+ 
+          const dateDiff = dueDate - dateDate
+          
+          if ( dateDiff <= 0 && enabledDueDateChkbx.checked) {
+                 userAlert.textContent = "Due date cannot be less or equal to now."
+                dueDateStatus = "Invalid"
+                return dueDateStatus
+          }
+        }
+        function removeNewCategoryInp() {
+           
+           renderCategories()
+           get.elemId("new-category-div").style.display = 'none'
+           get.elem("#new-category-div input").value = ''
+           categorySel.style.display = ""
+
+           if(hiddenInp.value) {
+
+            const newCategory = recordDB.find(({id})=> id == hiddenInp.value)?.category
+            const newCategPos = Array.from(categorySel.options).findIndex( opt =>opt.value == newCategory)
+
+            categorySel.options[newCategPos].selected = true
+
+            
+
+           }
+
+        }
+
+        resetFieldBtn.onclick = resetFields
+        function resetFields() {
+            journalBodyInp.value = 'Title : '
+            hiddenInp.value = ''
+            searchInp.value = ''
+        
+            enableBtns()
+        }
+        updateRecordBtn.onclick = updateRecord
+        function updateRecord() {
+           
+             if (validateDueDate() == "Invalid") return
+             if (!hiddenInp.value) return
+
+            const indexId = recordDB.findIndex(({id}) => id == hiddenInp.value)
+
+            if (indexId === -1) {
+                 userAlert.textContent = "Record was not found.";
+                return;
+            }
+
+            const {category, recordBody, recordDueDate,isDueDateEnabled = false} = recordDB[indexId]
+            
+            if(journalBodyInp.value.replace(/\s*/g,'').length >= 10000){
+                userAlert.textContent = 'Record body has been set to take less than 10 000 characters.' 
+                return
+            }
+
+            const isTrue = recordBody.trim() ===
+                  journalBodyInp.value.trim() && 
+                       category == categorySel.value &&
+                   recordDueDate == dueDateInp.value &&
+                   isDueDateEnabled == enabledDueDateChkbx.checked
+        
+           if (isTrue){
+             userAlert.textContent = 'There are no new changes.'
+             setTimeout(()=>userAlert.textContent ='', 3000)
+              return
+          } 
+
+            
+            if (categorySel.value == "Not found" && (tempCategInp.value.match(/[a-z]/ig)||[]).length<3) {
+                userAlert.textContent = 'Category name must at least contain 3 letters.'
+                return
+            }
+            
+           const tempCateg = tempCategInp.value
+                .trim()
+                .toLowerCase()
+                .replace(/^[a-z]/i, c => c.toUpperCase())
+
+            recordDB[indexId].category = categorySel.value.includes('Not found') ? tempCateg : categorySel.value
+            recordDB[indexId].recordDueDate = dueDateInp.value
+            recordDB[indexId].lastUpdatedOn = Date.now()
+            recordDB[indexId].recordBody = journalBodyInp.value    
+            recordDB[indexId].isDueDateEnabled = enabledDueDateChkbx.checked
+            DB.save()
+
+        
+          if ( get.elem(`#record${hiddenInp.value}`) ) {
+            const cleanTitle = (recordBody.trim().match(/(?<=title[\s:]*)\s*\w.+/gi)||['No title'])[0]
+            get.elem(`#record${hiddenInp.value} .record-category`).textContent = recordDB[indexId]?.category
+            get.elem(`#record${hiddenInp.value} .record-title`).textContent = (recordDB[indexId].recordBody.match(/Title.*/im)||[''])[0]
+            get.elem(`#record${hiddenInp.value} .record-body`).textContent = recordDB[indexId].recordBody.replace(/Title.*/im,'')
+          }
+            userAlert.textContent = 'Changes are updated'
+           
+            
+            if (tempCategInp.value) {
+                renderCategories()
+                removeNewCategoryInp()
+
+            }
+ 
+            
+        }
+    
+        deleteRecordBtn.onclick = deleteRecord
+        function deleteRecord() {
+
+         if (deleteRecordBtn.textContent.startsWith('Delete')) {
+
+            const selectedId = hiddenInp.value
+            
+            deleteRecordBtn.textContent = `Undo in 10s`
+            let countDown = 10
+            recordDelInterval = setInterval(()=>{
+                countDown -=1
+                deleteRecordBtn.textContent = `Undo in ${countDown}s`
+
+                if (countDown <= 0) {
+                    deleteRecordBtn.textContent = `Undo in 10s`
+                    removeRecord(selectedId)
+                    clearInterval(recordDelInterval)
+                    DB.save()
+                    deleteRecordBtn.textContent = 'Delete'
+
+                }
+
+            }, 1000)
+        }else {
+            deleteRecordBtn.textContent = 'Delete'
+            clearInterval(recordDelInterval)
+
+        }
+
+        function removeRecord(selectedId) {
+      
+            const CategoriesLenBefore = [...new Set(recordDB.map(a =>a.category))].length
+            const indexId = recordDB.findIndex(({id})=> id == selectedId)  
+            recordDB.splice(indexId, 1)
+            hiddenInp.value = ''
+            DB.save()
+            const CategoriesLenAfter = [...new Set(recordDB.map(a => a.category ))].length
+            if ( CategoriesLenBefore !== CategoriesLenAfter )
+                removeNewCategoryInp()
+            resetFields()
+            const objsWithCurCategory = recordDB.filter(({category})=>category === categorySel.value )
+            renderRecords(objsWithCurCategory??recordDB)
+        }
+
+        }
+       
+        function validateInputs() {
+    
+          const JournalBody = journalBodyInp.value.replace(/title|\:|\s/ig,'')
+        
+            userAlert.textContent += JournalBody
+          
+
+        }
+
+        function renderRecords( srcDB = recordDB ) {
+            recordBox.innerHTML = ''
+
+            const tb = srcDB.map(({id, category,favored,recordBody})=>{
+              const categoryId = getCategoryIndex(category)
+              const createdDate = secondsToDate(id)
+              const cleanTitle = (recordBody?.match(/Title.*/im)||[''])[0]
+              const cleanBody = ((recordBody ?? '').replace(/Title.*/im,''))
+             return `
+              <table class="existing-records" id="record${id}" style="border:thin solid ${bgColors[categoryId]}" onclick="retrieveRecord(${id})">
+                <tr>
+                    <td rowspan="4" style="background:${bgColors[categoryId]}">
+                         <img id="fav-img${id}" 
+                         src='./gallery/appResources/${favored?'bookmarked_icon':'bookmark-off-icon'}.svg'
+                          class="favorite-icon" onclick="event.stopPropagation();updateBookmarks(${id})">
+                    
+                        <span class="record-category">${category}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="creation-record-date">${createdDate}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="record-title">${(cleanTitle || '').slice(0, 40)}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="record-body">${cleanBody}</span>
+                        <span style="display:${category == 'Reminder'?'inline-block':'none'};" id="countdown${id}" class='${category == "Reminder" ? "due-date-countdown":"nothing"}'>4d:3h:34m</span>
+                        <div id="download-icon"><img onclick="event.stopPropagation();exportDB(${id})" src="gallery/appResources/download_icon.svg" title="export icon"></div>
+        
+                    </td>
+                </tr>
+             </table>`
+
+            }).join("")
+
+            recordBox.innerHTML = tb
+            recordCount.textContent = srcDB.length
+            loadExpiredRecords()
+            addBars()
+            colorClickedRecord()
+            calcDueDate()
+            updateFavorites()
+
+        }
+
+       
+        function retrieveRecord(objId) {   
+            userAlert.textContent = ""
+            const record = recordDB.find(({ id }) => id == objId);
+
+            if (!record) {
+                console.error("Record not found:", objId);
+                return;
+            }
+
+            const {
+                id,
+                recordBody,
+                recordDueDate,
+                category,
+                isDueDateEnabled = false,
+                lastUpdatedOn = id
+            } = record;
+
+            dateTimeInp.value = secondsToDate(id)
+            dueDateInp.value = recordDueDate ?? null
+     
+              const categoryId = getCategoryIndex(category)
+              categorySel.options[categoryId].selected = true
+              lastUpdatedOnInp.value = secondsToDate(lastUpdatedOn)??secondsToDate(id)
+              journalBodyInp.value = recordBody
+              hiddenInp.value = objId
+              enabledDueDateChkbx.checked = isDueDateEnabled
+              dueDateInp.disabled = !isDueDateEnabled 
+              const ele = document.querySelector(`#record${objId}`)
+              const rect = ele.getBoundingClientRect()
+              pictureLabel.value = ''
+              get.elemId("image-hidden-inp").value = ''
+
+              const recordIndex = recordDB.findIndex( obj =>obj.id == objId)
+              const imagesCount = (recordDB[recordIndex]?.images || []).length
+              const sTag =  imagesCount >= 1 ?'s':''
+
+              get.elemId("show-gallery-btn").textContent 
+              =
+              `${imagesCount >=1 ? 'View '+imagesCount+' attachment'+sTag:'No attachments added.'}`
+            get.elemId("update-image-btn").textContent = "Upload new image"
+            imageHiddenInp.value = ''
+                fileImage.disabled = false
+                pictureLabel.disabled = false
+                get.elemId("update-image-btn").disabled = false
+              renderImagesLabel()
+              enableBtns()
+            ele.scrollIntoView({
+                 behavior: 'smooth',
+                block: 'start'
+            });
+
+       
+        }
+       
+        journalBodyInp.addEventListener('input', checkUnsavedJournal)
+        //journalBodyInp.addEventListener('input', autoSaveChanges)
+       // journalBodyInp.addEventListener('mouseleave', updateRecord)
+        function checkUnsavedJournal() {
+
+            if (hiddenInp.value === '' || userAlert.textContent.includes('unsaved')) return
+            const targetObj = recordDB.find(({id})=> id == hiddenInp.value).recordBody
+
+           if (journalBodyInp.value.trim() !== targetObj.trim()) 
+                 userAlert.textContent = 'Changes are unsaved.'
+        
+
+          
+        }
+
+        function autoSaveChanges() {
+           if (hiddenInp.value === '') return
+            const targetObj = recordDB.find(({id})=> id == hiddenInp.value).recordBody.match(/\w+/gi)||[]
+           if (Math.abs((journalBodyInp.value.match(/\w+/gi)||[]).length - targetObj.length) > 5) 
+                 updateRecord()
+        
+              
+        }
+    
+        enableBtns()
+        function enableBtns() {
+            deleteRecordBtn.disabled = hiddenInp.value ? false : true 
+            updateRecordBtn.disabled = hiddenInp.value ? false : true 
+            addNewRecordBtn.disabled = hiddenInp.value ? true : false 
+            colorClickedRecord()
+            
+        }
+
+      calcDueDate()
+      countBookedMarked()
+      countDuedRecords()
+      
+      function updateBookmarks(id) {
+         const countFav = document.querySelectorAll('#favorite-box li')
+         const recordId = recordDB.findIndex( record => record.id === id)
+         const isBookmarked = Boolean(recordDB[recordId]?.favored)
+
+       if (recordId === -1) {
+          userAlert.textContent = 'Record was not found.'
+          return
+       }
+
+       if (recordDB.filter(({favored})=>favored == true).length >= 10 && !isBookmarked){
+        userAlert.textContent = 'You can only add up to 10 favorites'
+       }
+       else{
+         
+
+          
+         recordDB[recordId].favored = !isBookmarked
+        const favoriteBox = document.querySelector(`#fav-img${id}`)
+           favoriteBox.src = `./gallery/appResources/${recordDB[recordId].favored ? 'bookmarked_icon':'bookmark-off-icon'}.svg`
+           updateFavorites()
+           countBookedMarked()
+           DB.save()
+        }
+         
+      
+      }
+      function countBookedMarked() {
+        const countFav = get.elemId('favorite-record-count')
+        const favRecords = document.querySelectorAll('#favorite-box li')
+        countFav.textContent = favRecords.length
+    }
+    function countDuedRecords() {
+       const countDueRecord = get.elemId('dued-records-count')
+       const duedRecords = document.querySelectorAll("#due-record-box li")
+       countDueRecord.textContent = duedRecords.length
+      }
+    
+      function updateFavorites() {
+
+       const favoriteBox = getElem('#favorite-box') 
+       if (!favoriteBox)  return 
+
+       const favorites = recordDB.filter(({favored})=> favored) || []
+       favoriteBox.innerHTML = favorites.map(({recordBody,id})=> {
+        const titleLabel = ((recordBody ?? '').match(/(?<=\s*title[\s:]*)\w.+/i)?.[0] ?? 'No title').slice(0, 30)
+        
+        return `<li onclick="retrieveRecord(${id})">${titleLabel}</li>`
+
+    }).join("")
+
+
+      }
+       function calcDueDate() {
+
+          document.querySelectorAll('.due-date-countdown').forEach(reminder =>{
+            const reminderId = reminder.id.replace(/[a-z]*/g,'')
+            const {recordDueDate}  = recordDB.find(({id})=> id == reminderId)
+           
+        
+           const dueDate = new Date(recordDueDate).getTime()
+
+           let dateDiff = dueDate - Date.now()
+            
+           const d = Math.floor(dateDiff/(60*60*1000*24))
+           const h = Math.floor( dateDiff / (60*60*1000)%24 )
+           const m = Math.floor( dateDiff / (60*1000) % 60 )
+           const s = Math.floor((dateDiff/1000)%60)
+
+           reminder.textContent = 
+           `${d}d:${h}h:${m}m `
+          
+           const shadowPercent = (Date.now() / dueDate).toFixed(2)*10
+      
+
+          })
+
+         
+       }
+       function getCategoryIndex(categoryName) {
+            let categoryId = 0 
+            for (let i = 0; i<categorySel.length; i++) {  
+               categoryId = i
+              if(categorySel.options[i].value == categoryName)
+                 break
+            }
+            return categoryId
+        }
+       searchInp.oninput = searchRecords
+
+       function searchRecords() {
+
+         const objs = recordDB.filter(({recordBody = ''}) => recordBody.toLowerCase().includes(searchInp.value.toLowerCase().trim()) )
+         renderRecords(objs)
+         recordsBox.scrollTop = 0
+       }
+       
+       const importExportLegend = get.elem("legend")
+
+       importExportLegend.addEventListener('click', importExportDb)
+  
+       function importExportDb(e) {
+    
+          
+        switch(e.target.textContent.replace(/\s\d.+$/,'') ) {
+            case 'Import':
+                 if ( !get.elemId('delete-all-sp').textContent.startsWith("Undo") )
+                get.elemId('browser-file-box').style.display = "block";
+
+             break
+            case 'Export': exportDB()
+              break;
+            case 'Delete all records': deleteAllRecord()
+              break;
+            case 'Undo Delete all in':deleteAllRecord()
+             break;
+        }
+       }
+       
+       const importFile = get.elemId("import-btn")
+
+       importFile.onclick = importDB
+
+       function importDB() {
+
+    const file = get.elemId("file-to-import").files[0];
+
+    if (!file) {
+        userAlert.textContent = "Please select a file first.";
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+        try {
+            const db = JSON.parse(reader.result);
+
+            const imported = Array.isArray(db) ? db : [db];
+            const validRecords = imported.filter(record =>
+                record &&
+                (typeof record.id === 'number' || typeof record.id === 'string') &&
+                typeof record.recordBody === 'string'
+            );
+
+            if (!validRecords.length) {
+                userAlert.textContent = "The file does not contain valid journal records.";
+                return;
+            }
+
+            recordDB.push(...validRecords);
+            correctDuplicateByID();
+            DB.save();
+
+            get.elemId("browser-file-box").style.display = "none";
+            renderCategories();
+            renderRecords();
+
+            userAlert.textContent = "Records imported successfully.";
+        } catch (err) {
+            console.error(err);
+            userAlert.textContent = "The selected file is not valid JSON.";
+        }
+    };
+
+    reader.onerror = () => {
+        userAlert.textContent = "Unable to read the file.";
+        console.error(reader.error);
+    };
+
+    reader.readAsText(file);
+}
+
+       function exportDB(recordID) {
+         if (recordDB.length == 0) {
+
+             userAlert.textContent = 'There is nothing to export.'
+             return
+            }
+
+          const curToday = new Date()
+         const filename = 'journal_' + curToday.toLocaleString('en-ZA',{})
+         .replace(/:/g,'.')
+         .replace(/\//g,'-')
+         .replace(', ','_')
+          let expFile = null
+          if (recordID){
+            const record = recordDB.find(({id})=>id == recordID) 
+            const title = ((record?.recordBody || '').trim().match(/(?<=Title\s*:\s*)\w+.*/i)?.[0] || '_unit').replace(/[^\w-]+/g, '_')
+            expFile = new File([JSON.stringify(record, null, 2)], filename+'_'+title+'.json',{type:"application/json"})
+        }else{
+
+            expFile = new File([JSON.stringify(recordDB, null, 2)], filename+'_size_'+recordDB.length+'_records.json',{type:"application/json"})
+        } 
+
+         const link = document.createElement('a')
+         link.href = URL.createObjectURL(expFile)
+         link.download = expFile.name
+         link.target = "_blank"
+         document.body.append(link)
+         link.click()
+         link.remove()
+         URL.revokeObjectURL(link.href)
+
+       }
+ 
+       function correctDuplicateByID() {
+
+          for (let i = 0; i < recordDB.length; i++){
+              
+              const records = recordDB.filter( obj => obj?.id == recordDB[i]?.id)
+            if ( records.length > 1 ) {
+                const id = records[1]?.id 
+                let duplRecordIndex = recordDB.findLastIndex(obj => obj.id == id)
+                recordDB[duplRecordIndex].id = recordDB[duplRecordIndex]?.id + 1
+                DB.save()
+
+                i = 0
+
+            }
+                
+         }
+         renderRecords() 
+          
+       }
+ 
+       function deleteAllRecord() {
+        const delAllBtn =  get.elemId('delete-all-sp')
+
+         if (recordDB.length == 0 ) {
+            userAlert.textContent = 'There is nothing record.'
+            return
+         }
+
+        
+         if (delAllBtn.textContent != 'Delete all records') {
+            clearInterval(deleteAllInterval)
+            delAllBtn.textContent = 'Delete all records'
+            
+            return
+         }
+        
+          const sureToDel = confirm("Confirm to delete all records.")
+
+          if (sureToDel) {
+           
+            let countdown = 10
+            deleteAllInterval = setInterval(()=>{
+                countdown -=1
+                delAllBtn.textContent = `Undo Delete all in ${countdown}s`
+
+                if ( countdown <= 0 ) {
+                    recordDB.length = 0
+                    DB.save()
+                    renderRecords()
+                    clearInterval(deleteAllInterval)
+                    delAllBtn.textContent = 'Delete all records'
+                   
+                }
+
+
+            }, 1000)
+
+           
+           
+            
+          }
+       }
+       
+       function secondsToDate(secondDigits) {
+
+          const newDate = new Date(secondDigits)
+            .toLocaleString('en-ZA',{hourCycle:"h23"})
+            .replaceAll('/','-')
+            .replace(', ','T')
+
+          return newDate
+        }
+       window.addEventListener('resize', addBars)
+       function addBars() {
+
+        const barsBox = document.querySelector('canvas')
+        barsBox.width = barsBox.clientWidth;
+        barsBox.height = barsBox.clientHeight;
+        const cx = barsBox.getContext('2d')
+        const x = barsBox.width
+        const y = barsBox.height
+        const gapX = 5
+        const gapY = 50
+        const barW = 20
+
+        const fontSize = '13px sans-serif'
+        
+        cx.clearRect(0,0,x,y);
+        cx.beginPath()
+        cx.moveTo(gapX, 10)
+        cx.lineTo(gapX, y-gapY)
+        cx.lineTo(x-gapX, y-gapY)
+        cx.lineWidth = .5
+        cx.stroke()
+        cx.closePath()
+
+        cx.font = fontSize
+        cx.fillStyle = 'red'
+        cx.fillText('Records',x/2, 10)
+        const categ = recordDB.map(({category})=>category)
+        const uniqueCate = [...new Set(categ)]
+
+        const categoryObj = uniqueCate.map(catgo =>{
+            return {
+                     categName:catgo,
+                     categCount:categ.filter(value => catgo === value  ).length,
+                   };
+        })
+
+        const countTot = categoryObj.map(({categCount}) => categCount)
+                        .reduce((acc,sum)=>acc + sum, 0)
+
+
+        categoryObj.sort((a,b)=>b.categCount - a.categCount)
+       // categoryObj.length = 20
+
+        categoryObj.forEach(({categName, categCount },i)=>{
+       
+            cx.save()
+            cx.rotate(-Math.PI / 2)
+            const colorIndex = getCategoryIndex(categName)
+            const bgColor = bgColors[colorIndex]
+            cx.fillStyle = "#00f"
+            //cx.textAlign = "right"
+            cx.textBaseline ="middle"
+            
+            cx.font = fontSize
+            cx.fillText(categName.slice(0,5), y+gapY-39, (barW*i)+gapX+9)
+            cx.restore()
+
+            let barH = categCount+15
+      
+            cx.fillStyle = bgColor;
+
+            cx.fillRect((barW*i)+gapX,y-barH-gapY, barW-5,barH);
+            
+            cx.save()
+            cx.rotate(-Math.PI / 2)
+        
+            cx.fillStyle = "#000"
+            cx.textBaseline = "middle"
+            cx.font = fontSize
+            cx.fillText(categCount,-y+gapY+10, (barW*i)+gapX+9)
+            cx.restore()
+        })
+
+
+       }
+
+       categorySel.addEventListener('change', filterByCategory)
+       function filterByCategory() {
+            tempSetting.filterByFunc = filterByCategory
+       
+        if (categorySel.value === "Not found") {
+            categorySel.style.display = "none"
+            get.elemId("new-category-div").style.display = 'block'
+           
+            return 
+        }
+         const newDb = recordDB.filter( ({category})=> category.toLowerCase() == categorySel.value.toLowerCase() )
+         renderRecords(newDb)
+         recordBox.scrollTop = 0
+        
+       }
+       dateTimeInp.addEventListener('input', filterByDateTime)
+
+       function filterByDateTime() {
+       
+         const newDb = recordDB
+         .filter(({id}) => secondsToDate(id).includes(dateTimeInp.value.replace(/T.*/g,'')))
+          renderRecords(newDb)
+       }
+
+       lastUpdatedOnInp.addEventListener('input', filterByRecordUpdate)
+       function filterByRecordUpdate() {
+            const newDb = recordDB
+         .filter(({lastUpdatedOn}) => secondsToDate(lastUpdatedOn).toString().includes(lastUpdatedOnInp.value.replace(/T.*/g,'')))
+            renderRecords(newDb)
+       }
+       dueDateInp.addEventListener('input', filterByDueDate)
+       updateCurDateEle()
+       function updateCurDateEle() {
+         get.elemId("current-datetime-sp").textContent =
+           new Date().toLocaleString('en-ZA',
+                         {timeStyle:"long",dateStyle:"long"}).replace(/:\d+ [a-z]+$/i,'')
+           .toLocaleString('en-ZA',{month:'short'})
+           
+       }
+       
+       function filterByDueDate() {
+          dateTimeInp.value = secondsToDate(new Date().getTime())
+          updateCurDateEle()
+        if ((dueDateInp.value.match(/:/g)||'').length ==1)
+             dueDateInp.value = secondsToDate(`${dueDateInp.value}:01`)
+
+         const newDb = recordDB.filter( ({recordDueDate})=> recordDueDate?.includes(dueDateInp.value.replace(/T.*/g,'')??[]))  
+         renderRecords(newDb)
+           
+       }
+       get.elem("#new-category-div span").onclick = ()=>{
+           get.elemId("new-category-div").style.display = 'none'
+           categorySel.style.display = ""
+
+       }
+       function colorClickedRecord() {
+      
+        try{
+
+            get.elems('.existing-records')
+             .forEach(record => record.style.background = '')
+
+             get.elem(`#record${hiddenInp.value}`)
+             .style.background = "linear-gradient(125deg, #FFF 80%,#20a4cb)"
+
+        }catch(err){
+          // console.log(err.stack)
+        }
+ 
+       }
+       
+       setInterval(()=>{
+        loadExpiredRecords()
+       },10000)
+
+       function loadExpiredRecords() {
+         const reminderRecords = recordDB.filter(({recordDueDate,category,isDueDateEnabled}) =>
+          Date.now() >=new Date(recordDueDate) && isDueDateEnabled)
+
+         const notiCount = get.elemId("notifications-count")
+         notiCount.textContent = reminderRecords.length
+
+         const expiredRecord = reminderRecords
+         const li = expiredRecord.map(({id, category,recordBody})=>{
+            const cleanTitle = (recordBody.trim().match(/(?<=title\s*:+\s*)\w.*/i)||['No title'])[0]
+          
+           return  `<li onclick="retrieveRecord(${id})">${category} ${cleanTitle}...</li>
+         `}).join("")
+
+         const listDisplayBox = get.elem("#due-record-box")
+
+         if (expiredRecord.length>0){
+            listDisplayBox.style.display = "block"
+             get.elem("#notification-box ul").innerHTML = li
+             get.elem("#notification-icon").classList.add("bell-shake")
+         }else {
+             listDisplayBox.style.display = "none"
+             get.elem("#notification-icon").classList.remove("bell-shake")
+         }
+        
+
+       }
+       function clearAlert() {
+         setTimeout(function(){userAlert.textContent = ''},5000)
+       }
+
+       function openGalleryWindow() {
+        if (!hiddenInp.value) {
+            userAlert.textContent = 'Select a record first.'
+            return
+        }
+        renderImagesLabel() 
+        get.elemId("picture-frame").style.display = "block"
+
+       }
+      get.elemId("update-image-btn").onclick = uploadImage
+        
+
+        fileImage.onchange =()=>{
+            get.elemId("update-image-btn").textContent = "Upload new image"
+            pictureLabel.value = fileImage.files[0].name.replace(/.\w+$/i,"").slice(0, 8)
+
+        }
+       fileImage.disabled = true
+       pictureLabel.disabled = true
+       get.elemId("update-image-btn").disabled = true
+       function uploadImage() {
+         
+         const id = hiddenInp.value 
+         if ( !id ) {
+           get.elemId("image-alert").textContent = 'No selected record.'
+            return 
+         }
+
+         if( !fileImage.value.trim() && !pictureLabel.value.trim() ){
+            get.elemId("image-alert").textContent
+             = 'Attachment and attachment label are required.'
+            return
+
+         }
+         
+         const recordIndex = recordDB.findIndex( record=>record.id == id)
+          if ( !recordDB[recordIndex].images )
+              recordDB[recordIndex].images = []
+        
+       if ( imageHiddenInp.value.trim() ) {
+             const recordIndex = recordDB.findIndex( ({id})=> id == hiddenInp.value )
+             const imgIndex = recordDB[recordIndex].images.findIndex( img =>img.imageId == imageHiddenInp.value)
+             recordDB[recordIndex].images[imgIndex].imageLabel =
+              pictureLabel.value.trim() ||'No labelled'
+             recordDB[recordIndex].images[imgIndex].url =
+              fileImage.files[0]?.name || recordDB[recordIndex].images[imgIndex].url
+             DB.save()
+             const imgObj = recordDB[recordIndex].images[imgIndex]
+             imageHiddenInp.value = imgObj.imageId
+             
+             const pos = recordDB[recordIndex].images
+             .findIndex( img => img.imageId == imgObj.imageId )
+
+             document.querySelectorAll('#gallery-list li')[pos].click()
+             renderImagesLabel()
+
+
+
+        return 
+       }
+
+        let picture = {
+            imageId:'img'+Date.now(),
+             url:fileImage.files[0].name,
+             imageLabel: pictureLabel.value.trim() || 'Not labelled'
+            };
+        if ( recordDB[recordIndex].images.map(img =>img.url).includes(picture.url)) {
+            const pos = 
+            Number(recordDB[recordIndex].images.map(img =>img.url).indexOf(picture.url))+1
+            get.elemId("image-alert").textContent ='The picture already exist in position number '+pos
+            return
+        }
+       
+        
+        recordDB[recordIndex].images.push(picture)
+        
+        DB.save()
+        renderImagesLabel()
+        const pos = recordDB[recordIndex].images.findIndex( img => img.imageId == picture.imageId)
+        document.querySelectorAll('#gallery-list li')[pos].click()
+
+       }
+
+       const pictureLabels = get.elemId("gallery-list")
+
+       function renderImagesLabel() {
+
+         const index = recordDB.findIndex( record=>record.id == hiddenInp.value )
+          pictureLabels.innerHTML = ''
+          fileImage.value = ''
+          get.elemId("gallery-display").innerHTML = ''
+
+         if (index === -1) return
+
+         if (recordDB[index]?.images)
+         pictureLabels.innerHTML = recordDB[index].images
+        .map(({imageId,url, imageLabel})=> `<li id="${imageId}">${imageLabel}</li>`).join('')
+        
+        get.elemId("image-alert").textContent = ''
+       }
+
+       pictureLabels.addEventListener('click', displayImage)
+
+       function displayImage(event) {
+         const target = event.target 
+      
+        
+         if (target.tagName !== 'LI') 
+            return
+      
+        let checkPic = false 
+        
+         pictureFrame.innerHTML = ''
+         zoomUnit = 100
+         const recordIndex = recordDB.findIndex( ({id})=> id == hiddenInp.value )
+         if (recordIndex === -1 || !recordDB[recordIndex]?.images) return
+
+         const imageHiddenInp = get.elemId("image-hidden-inp")
+         const imgIndex = recordDB[recordIndex].images.findIndex( img =>img.imageId == target.id)
+         if (imgIndex === -1) return
+         imageHiddenInp.value = target.id
+         const img = recordDB[recordIndex]?.images[imgIndex]
+         const url = `./gallery/${img?.url}`
+         
+         let newLink = url
+         if (/\.(png|jpeg|jpg|jiff)/i.test(url) ) {
+                newLink = `./gallery/${img?.url}`
+         }else {
+
+             newLink = "./gallery/appResources/attachment.png"
+         }
+         
+       
+
+        pictureFrame.innerHTML = `<img id="image-displayed" alt="${img?.imageLabel ?? target.textContent.trim()}" src="${newLink}">
+        <div id="img-control-box" data-value="${target.id}">
+            <span class="file-type">${(url.match(/(?<=\.)\w+$/)||[''])[0].toUpperCase()}</span>
+            <span class="download-icon">Download</span>
+            <span>Delete</span><span>Zoom in</span>
+            <span>Zoom out</span>
+            <span>Magnifier</span>
+            </div>
+        `
+         
+      pictureLabel.value = img?.imageLabel
+      get.elemId("update-image-btn").textContent = "Update image"
+    
+    const imageControlSpn = get.elemId("img-control-box")
+    imageControlSpn.onclick = getImageControl
+    }
+
+    let deleteImageBtn = null
+    function getImageControl(event) {
+        const target = event.target
+        if ( target.tagName !== "SPAN")
+            return 
+
+        const imgId = target.parentElement.dataset.value
+      const recordIndex = recordDB.
+      findIndex( record => record.id == hiddenInp.value) 
+
+      if ( recordIndex <= -1 ) {
+        imageFeedback.textContent = 'Record was not found,  try again.'
+        return 
+      }
+      
+      const imgIndex = recordDB[recordIndex].images
+        .findIndex( img => img.imageId == imgId)
+      const imgObj = recordDB[recordIndex].images[imgIndex]
+      const imageDisplayed = get.elemId("image-displayed")
+       
+        switch(target.textContent.replace(/\s\d.+$/,'')) {
+            case "Download":
+               
+            const link = document.createElement('a');
+
+            link.href = './gallery/'+imgObj.url
+            link.download = imgObj.url;
+
+            document.body.append(link);
+            link.click();
+            link.remove();
+            break
+
+            case "Delete":
+            let countDown = 10
+              target.textContent = `Undo in 10s`
+            imageDelInterval = setInterval(()=>{
+
+                countDown -=1
+                target.textContent = `Undo in ${countDown}s`
+
+                if (countDown <= 0) {
+                    recordDB[recordIndex].images.splice(imgIndex, 1)
+                    DB.save()
+                    get.elemId("image-hidden-inp").value = ''
+                    clearInterval(imageDelInterval)
+                    renderImagesLabel()
+                    get.elemId("update-image-btn")
+                    .textContent = "Upload new image"
+                    imageHiddenInp.value = ''
+
+                }
+                 
+            },1000)
+            
+
+                break;
+            case "Zoom in":
+                if (zoomUnit >= 300) {
+                    imageFeedback.textContent = 'Cannot zoom in further'
+                    return
+                }
+                 zoomUnit +=10
+                imageDisplayed.style.transform = `scale(${zoomUnit / 100})`
+                imageDisplayed.style.verticalAlign = "top"
+                break
+                case "Zoom out":
+                    if (zoomUnit <= 30) {
+                      imageFeedback.textContent = 'Cannot zoom out further'
+                       return
+                    }
+                    zoomUnit -=10
+
+                 
+                imageDisplayed.style.transform = `scale(${zoomUnit / 100})`
+                break
+                case 'Undo in':
+                    clearInterval(imageDelInterval)
+                    target.textContent = 'Delete'
+
+                break
+        }
+    
+
+    }
+   
+async function checkImage(url) {
+
+    try {
+
+        const image = new Image();
+
+        const promise = await new Promise((resolve, reject) => {
+            image.onload = () => resolve(true);
+            image.onerror = () => reject(false);
+
+            image.src = url;
+
+        })
+      
+        return true;
+
+    } catch {
+
+        return false;
+
+    }
+
+}
+   
+</script>
+
+
+
+</body>
+</html>
