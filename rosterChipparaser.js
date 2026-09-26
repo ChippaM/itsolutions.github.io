@@ -353,7 +353,7 @@ function cleanShifts() {
   }
 
   shiftData = ( shiftData.match(/\w.*/gm) || [''] )
-  .map(shift => shift.trim().toLowerCase().replace(/\s{2,}/g," "))
+  .map(shift => shift.trim().toUpperCase().replace(/\s{2,}/g," "))
 
  for(let shift of shiftData) { 
     if (shift.length > 25) {
@@ -401,7 +401,7 @@ shiftValue.value = shiftData.join("\n")
 
 const oldShifts = new Map(
     (rosterDB.shifts || []).map(shift => [shift.shift, shift])
-);
+)
 
 rosterDB.shifts = shiftData.map((shift, index) => {
 
@@ -614,12 +614,12 @@ function getOneCellNum(event) {
 
 
 function addWeekTable() {
+for(let t = 0; t< 5; t++) {
+  getElem("#roster-tables")
+  .insertAdjacentHTML('beforeEnd', weekRoster.outerHTML)
 
-getElem("#roster-tables").insertAdjacentHTML('beforeEnd', weekRoster.outerHTML)
-getElem("#roster-tables").insertAdjacentHTML('beforeEnd', weekRoster.outerHTML)
-getElem("#roster-tables").insertAdjacentHTML('beforeEnd', weekRoster.outerHTML)
-getElem("#roster-tables").insertAdjacentHTML('beforeEnd', weekRoster.outerHTML)
-getElem("#roster-tables").insertAdjacentHTML('beforeEnd', weekRoster.outerHTML)
+}
+
 
 getElem('.week-roster:nth-child(1) .row-number').value = rosterDB?.weekOneStartRowNo || 2
  getElem('.week-roster:nth-child(2) .row-number').value = rosterDB?.weekTwoStartRowNo || 18
@@ -693,7 +693,7 @@ function verifyMonth() {
 getElem('.week-roster:nth-child(1) .row-number').addEventListener("input", updateWeekOneStartRowNum)
 function updateWeekOneStartRowNum() {
   const rangeOne = getElem('.week-roster:nth-child(1) .row-number')
-  if(rangeOne.value >999 || rangeOne.value == 0) {
+  if(rangeOne.value >20 || rangeOne.value == 0) {
       rangeOne.value = 2
       return
   }
@@ -708,6 +708,9 @@ function updateWeekOneStartRowNum() {
 weekTwoStartRowNum.addEventListener("input", updateWeekTwoStartRowNum) 
 
 function updateWeekTwoStartRowNum() {
+  if (weekTwoStartRowNum.value.length > 2) {
+      weekTwoStartRowNum.value  = ( rosterDB.employees.length || 0 ) + 3
+  }
   rosterDB.weekTwoStartRowNo = getElem('.week-roster:nth-child(2) .row-number').value
  
 }
@@ -859,7 +862,7 @@ hours.addEventListener('change', validateHours)
 function validateHours(event) {
   const hour = event.target
  
-  const hr = hour.value 
+
     if (!/^(?:[1-9]|1[0-2])$/.test(hour.value)) {
           hour.value = 10;
     }
@@ -1203,18 +1206,15 @@ function rosterPeople() {
 
     const nonFixedShifts = rosterDB.shifts.filter(
         shift => shift.isNonFixedShift === true
-    );
+    )
 
     if (!nonFixedShifts.length) {
-        alert("No non-fixed shifts available.");
+        alert("No non-fixed shifts selected.");
         return;
     }
 
     clearShiftsBlocks();
 
- 
- 
- 
 
     function shuffle(array) {
 
@@ -1272,14 +1272,12 @@ function rosterPeople() {
 
     function getMaximum(shift, dayIndex, weekIndex) {
 
-        const value =
-            shift.shiftRepeats?.[dayIndex]?.[weekIndex];
+        const value = shift.shiftRepeats?.[dayIndex]?.[weekIndex];
 
         const maximum = Number(value);
 
         return Number.isFinite(maximum) && maximum > 0
-            ? maximum
-            : 0;
+            ? maximum : 0;
     }
 
 
@@ -1464,9 +1462,6 @@ function rosterPeople() {
                 }
 
 
-              
-                // Don't overwrite fixed shifts
-             
 
                 const hasFixedShift =
                     rosterDB.shifts.some(shift =>
@@ -1604,7 +1599,8 @@ function clearShiftsBlocks() {
 
                 
 
-                if (weekIndex === 0 && dayIndex < Number(rosterConfig.startCellNum) - 1) {
+                if (weekIndex === 0 && 
+                  dayIndex < Number(rosterConfig.startCellNum) - 1) {
 
 
                     continue;
@@ -1612,7 +1608,8 @@ function clearShiftsBlocks() {
 
 
        
-                if ( weekIndex === rosterConfig.totWeeksShown - 1 && dayIndex >  Number(rosterConfig.lastCellNum) - 1 ) {
+                if ( weekIndex === rosterConfig.totWeeksShown - 1 && 
+                  dayIndex >  Number(rosterConfig.lastCellNum) - 1 ) {
   
                     continue;
                 }
@@ -1647,9 +1644,7 @@ function clearShiftsBlocks() {
   
 }
 
-function getRandomNum(len) {
-  return Math.floor(Math.random() * len)
-}
+ 
  
 function updateShiftSettingTb() {
   const shiftSettTb = getElem("#shift-settings-tb");
@@ -1677,49 +1672,22 @@ function updateShiftSettingTb() {
       return Array.from({ length: 6 }, (_, index) => `
         <div class="${className}">
           W ${index + 1}
-          <input
-            type="number"
-            value="1"
-            min="0"
-            class="max-${day}"
-          >
+          <input type="number" value="2" min="0" class="max-${day}">
         </div>
-      `).join("");
+      `).join("")
     };
 
     const shiftRow = `
       <tr class="dynamic-shift-row">
         <td class="${className}">${shiftName}</td>
-
+        <td><input type="checkbox" class="allowance" ${allowance ? "checked" : ""}></td>
         <td>
-          <input
-            type="checkbox"
-            class="allowance"
-            ${allowance ? "checked" : ""}
-          >
+            <input type="color" class="shift-color" value="${shiftColor}">
+             <input  type="color" class="font-color" value="${fontColor}">
         </td>
-
         <td>
-          <input
-            type="color"
-            class="shift-color"
-            value="${shiftColor}"
-          >
-          <input
-            type="color"
-            class="font-color"
-            value="${fontColor}"
-          >
+          <input type="checkbox" class="non-fixed-shift" ${isNonFixedShift ? "checked" : ""} >
         </td>
-
-        <td>
-          <input
-            type="checkbox"
-            class="non-fixed-shift"
-            ${isNonFixedShift ? "checked" : ""}
-          >
-        </td>
-
         <td>${createWeekInputs("mon")}</td>
         <td>${createWeekInputs("tue")}</td>
         <td>${createWeekInputs("wed")}</td>
@@ -1728,10 +1696,10 @@ function updateShiftSettingTb() {
         <td>${createWeekInputs("sat")}</td>
         <td>${createWeekInputs("sun")}</td>
       </tr>
-    `;
+    `
 
     shiftSettTb.insertAdjacentHTML("beforeend", shiftRow);
-  });
+  })
 
   getShiftsToColor();
   restoreShiftSettingData();
@@ -1779,7 +1747,7 @@ function getSettingOpenAction(event) {
       case "Save Settings":
         saveSettings()
         break
-      case "Shift Numbers":
+      case "View Templates":
           getElem("#shift-template-box").style.display = "block"
         break
       case "View Templates":
@@ -1939,19 +1907,15 @@ function applyShiftColor(event) {
    const targetElem = event.target
   
    const row = targetElem.closest("tr");
-const className = row?.cells[0]?.classList[0];
- 
-if (!className) return;
- 
-const shiftIndex = rosterDB.shifts.findIndex(
-({ shiftNo }) => shiftNo === className
-);
+const className = row?.cells[0]?.classList[0]
 
+if (!className) return
+const shiftIndex = rosterDB.shifts.findIndex(({ shiftNo }) => shiftNo === className)
 
- 
-   const color = targetElem.value 
+ const color = targetElem.value 
  
    getElems(`.${className}:not(:has(input))`).forEach(shift => shift.style.background = color )
+
  if (shiftIndex === -1) return  
      rosterDB.shifts[shiftIndex].shiftColor = color
 
@@ -1974,7 +1938,7 @@ function applyShiftFontColor(event) {
 }
 function updateShiftTypeChkbox(event) {
 
-    getElem("#members-box").style.display = "none" 
+  getElem("#members-box").style.display = "none" 
   const checkbox = event.target
   const checkStatus = checkbox.checked
   const shiftName = checkbox.parentElement.parentElement.children[0].textContent
@@ -2049,13 +2013,7 @@ function updateShiftSettingTb() {
     const createWeekInputs = day => {
       return Array.from({ length: 6 }, (_, index) => `
         <div class="${className}">
-          W ${index + 1}
-          <input
-            type="number"
-            value="1"
-            min="0"
-            class="max-${day}"
-          >
+          W ${index + 1} <input type="number" value="1" min="0" class="max-${day}">
         </div>
       `).join("");
     };
@@ -2063,7 +2021,6 @@ function updateShiftSettingTb() {
     const shiftRow = `
       <tr class="dynamic-shift-row">
         <td class="${className}">${shiftName}</td>
-
         <td>
           <input type="checkbox" class="allowance" ${allowance ? "checked" : ""}>
         </td>
@@ -2071,7 +2028,6 @@ function updateShiftSettingTb() {
           <input type="color" class="shift-color" value="${shiftColor}">
           <input type="color" class="font-color" value="${fontColor}">
         </td>
-
         <td>
           <input type="checkbox" class="non-fixed-shift" ${isNonFixedShift ? "checked" : ""}>
         </td>
@@ -2091,7 +2047,7 @@ function updateShiftSettingTb() {
 
   getShiftsToColor();
   restoreShiftSettingData();
-}
+} 
 
 function saveSettings() {
   if ( !rosterDB.shifts ) {
@@ -2104,7 +2060,8 @@ function saveSettings() {
   DB.save()
   alert("                Successfully saved!!!")
  
-  }
+}
+
  getElem("#delete-shift-settings").onclick = deleteSavedDB  
 
  function restoreShiftSettingData() {
@@ -2137,7 +2094,7 @@ function saveSettings() {
         colorCell.children[1].value = fontColor  || "#ffffff"
 
         
-        if (nonShiftFixed)
+        if ( nonShiftFixed )
             nonShiftFixed.checked = isNonFixedShift;
         
         getElems(`.${shiftNo}:not(:has(input))`).forEach(shiftElement => {
@@ -3377,6 +3334,4 @@ if(rosterDB.shifts) {
  
 
 }
- 
-
  
