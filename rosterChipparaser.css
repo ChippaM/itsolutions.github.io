@@ -8,7 +8,7 @@
     }
 
     :root {
-      --employee_bg_color:rgb(186, 223, 245);
+      --employee_bg_color: rgb(186, 223, 245);
       --employee_font_color: #0c0c0c;
       --emp_font_weight: 500;
 
@@ -45,6 +45,8 @@
     main >section:first-child {
       order: 2;
       flex: 200px 3 1;
+
+    
     }
       main >section:last-child {
       order: 3;
@@ -82,12 +84,15 @@
  
     
     }
+    .week-roster tr th {
+      font-weight: bold;
+    }
     
    #roster-tables td:not(:first-child, :nth-child(2)) {
  text-transform: uppercase;
    }
-    #roster-tables th {
-      font-weight: 100;
+    .week-roster th {
+      font-weight: border;
       
      
     }
@@ -95,58 +100,34 @@
  
 
 
-    table span.add-emp-row,
-    table span.remove-emp-row
-    {
-      display: inline-block;
-     
-      width: 20px;
-      height: 20px;
-      border-radius: 10px;
-
-     padding: 0 5px;
-     font-weight: bolder;
-  
-    
-      cursor: pointer;
-      color: #fff;
-      
-    
- 
-    }
-    
-  
     .week-roster .row-number {
-      display: none;
       text-align: center;
+      
     }
-    .week-roster:first-child tr:nth-child(1) .row-number,
-    .week-roster:nth-child(2) tr:nth-child(1) .row-number  {
-      display: inline-block;
-      width: 40px;
+    .week-roster:first-child  tr:nth-child(3) .row-number,
+    .week-roster:first-child+table  tr:nth-child(3) .row-number{
+      background:rgb(232, 229, 169);
+      width:100%;
+      margin: 0 auto;
+      text-align: center;
 
-      margin: 0 auto ;
+      outline: none;
+
      
     } 
- 
-    table span.add-emp-row {
-      background: rgb(56, 111, 156);
-      display: none;
-    }
-   table span.remove-emp-row {
-      background: rgb(216, 32, 72);
-      display: none;
-    }
+
   .week-roster:not(table:first-child) span {
     visibility: hidden;
   }
    .employee-name {
-    background: var(--employee_bg_color);
+    background:  rgb(186, 223, 245);
     color: var(--employee_font_color);
-    font-weight: var(--emp_font_weight);
+    font-weight: 600;
     padding: 0 40px 0 5px;
     text-align: left !important;
     margin-left: 5px;
+
+    width: 10%;
   }
 
   .week-roster tr:nth-child(2) th:nth-child(10) {
@@ -266,6 +247,10 @@
         padding-left: 5px;
 
       }
+
+#action-buttons button:not(#validate) {
+  display: none;
+}
       #total-shifts-per-emp {
         width: 50px;
       }
@@ -299,10 +284,10 @@
        .remove-non-std-row {
           background: rgb(240, 200, 127);
        }
-        .add-non-std-row:active ,
-        .remove-non-std-row:active {
+.add-non-std-row:active ,
+.remove-non-std-row:active {
           transform: scale(.8);
-        }
+  }
 #Non-standard-shift-box:not(:has(#non-shift-chkbox:checked)) #non-std-shifts-tb {
     visibility: hidden;
 }
@@ -397,13 +382,13 @@ button#reset-shifts {
       max-height: 30vh;
       border: none;
       padding: 5px;
-      outline: thin solid rgb(139, 201, 212);
+      outline: none;
       font-size: 16px;
       font-family: Arial, Helvetica, sans-serif;
     }
     input {
         border: none;
-        outline: thin solid rgb(139, 201, 212);
+        
         
 
     }
@@ -436,7 +421,7 @@ button#reset-shifts {
   }
   .week-roster:has(.activeDate) {
 
-     visibility: visible;
+    visibility: visible;
 
   }
 
@@ -448,17 +433,13 @@ button#reset-shifts {
       top: 0px;
   }
  
-  .week-roster td:last-child,
-  .week-roster th:last-child {
-    display: none;
-  }
  
 
 
 .off {
  background: rgb(65, 221, 125);
 }
-  .shift-cell:not(td:nth-child(2)) {
+.shift-cell:not(td:nth-child(2)) {
     background: rgb(65, 221, 125);
     font-weight: 500;
   }
@@ -496,7 +477,7 @@ button#reset-shifts {
  #yellow-table td
 
  {
-  border:thin solid grey;
+  border:thin solid #000;
   padding: 1px 2px;
   text-align: center;
 
@@ -507,20 +488,37 @@ button#reset-shifts {
   
   
 }
+
+
 #yellow-table th:not(th:first-child):hover{
   cursor: pointer;
  Color : red !important;
 }
- #yellow-table td:not(td:first-child):active,.week-roster td:nth-child(10):active {
+
+ #yellow-table td:not(td:first-child),
+#total-hours-tb td:not(td:first-child),
+ .week-roster td:nth-child(10){
+  cursor: pointer;
+ }
+ #yellow-table td:not(td:first-child):active,
+#total-hours-tb td:not(td:first-child):active,
+ .week-roster td:nth-child(10):active {
   background: rgb(48, 137, 226);
   color: #fff;
  }
+  #allowanceTb{
+    width: 15vw;
+  }
  #allowanceTb th {
-  border:thin solid;
+  border:thin solid #000;
   padding:2px 5px;
+  width: fit-content;
+  font-weight: bolder;
  }
 #allowanceTb td {
-  border: thin solid;
+  border: thin solid #000;
+  text-align: center;
+ 
 }
 .selectedYellowHeader:not(th:first-child,th:last-child)::before {
   content: "";
@@ -600,7 +598,8 @@ footer {
     list-style: none;
 }
  #settings-option  ul li {
-    font-size: large;
+    font-size: 12px;
+    font-family:'Courier New', Courier, monospace
  }
 #settings-option > ul > li {
     position: relative;
@@ -608,6 +607,7 @@ footer {
     font-size: 12px;
     cursor: pointer;
     border-radius: 3px;
+  
 }
 
  
@@ -741,6 +741,7 @@ footer {
   width:fit-content;
   height: fit-content;
   position:absolute;
+
   top: 20vh;
   left: 40vw;
   border-radius: 10px;
@@ -945,6 +946,7 @@ div:has(.close-btn) {
 
   
 }
+
 #unallowed-shift-order-box h2 {
   font-size: 16px;
 }
@@ -985,6 +987,7 @@ height: 5px;
  main > section:last-child{
      display: none;
     }
+
 main > section:nth-child(2) {
  
   justify-self: left;
@@ -1043,15 +1046,10 @@ display: none;
 
 }
 
-#use-selected-template {
-  background: #5d80d2;
-}
-#export-template {
-  background: rgb(105, 128, 39)
-}
 
-#import-template {
-  background: rgb(90, 155, 188);
+
+#save-template {
+  background: rgb(96, 131, 110);
 }
 
 
