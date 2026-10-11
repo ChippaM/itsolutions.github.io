@@ -4,21 +4,41 @@ const getElems = (ele) => document.querySelectorAll(ele);
 const getEleByID = (ele) => document.getElementById(ele);
 const getClassElem = (ele) =>document.getElementsByClassName(ele);
 
+
+let database = {
+  settings:[],
+  isNewSetting: false,
+  index : 0,
+
+}
+
+let sessionData = {
+  currentMonth: null,
+  delimiter: null,
+  showInputOutput: true,
+  currentSetting: null}
+
+
 let rosterDB = {}
 const rosterConfig = {}
+const tempSession = {}
 const birthday = [{employee:"Chippa", date:"03-03"}]
 
 const DB = {
-  save: () => {localStorage.setItem("rosterDB", JSON.stringify(rosterDB))},
+  save: () => saveSettings(),
   get: () => JSON.parse(localStorage.getItem("rosterDB")),
-  delete: () => {localStorage.removeItem("rosterDB"), location.reload()}
+  delete: () => {
+    localStorage.removeItem("rosterDB") 
+    sessionStorage.removeItem("rosterSession") 
+    location.reload()
+  }
 }
 
-const cols = getElem(".week-roster tr:first-child").textContent.replace(/\s|Row No/g,"").split("")
+///const cols = getElem(".week-roster tr:first-child").textContent.replace(/\s|Row No/g,"").split("")
 const delim = getElem("span#delim")
 const splitterBox = getElem("#splitter-box")
 const delims = getElems("span.splitter")
-
+const inputBox = getElem("#input-data")
 const cellValue = getElem("#cell-number")
 const hours = getElem("#standard-hours")
 const shiftValue = getElem("#shift-values")
@@ -29,6 +49,7 @@ const rangeElems = getClassElem("range")
 const hourLabel = getElem("#hour-label")
 let weekOneStartRowNum = rangeElems[0]
 let weekTwoStartRowNum = rangeElems[(rangeElems.length%6)+1]
+const copyStatus = getElem("#copy-status")
 
 const leftShift = getElem("#leftShift")
 const rightShift = getElem("#shiftRight")
@@ -37,31 +58,49 @@ try {
   const savedDB = DB.get();
 
   if (savedDB && typeof savedDB === "object") {
-    rosterDB = savedDB;
-  }
+    database = savedDB 
+    const id = database.index || 0
+    sessionData.currentSetting = database.settings[id] 
+    rosterDB = database.settings[id];
 
+    //sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
+    
+
+    
+    
+  } 
+
+
+  if (sessionStorage.hasOwnProperty("rosterSession")) { 
+       sessionData = JSON.parse(sessionStorage.getItem("rosterSession"))
+      getElem(".active-month").textContent = sessionData.currentMonth || 
+      new Date().toLocaleDateString("en-ZA", {month:"long", year:"numeric"}) 
+
+      
+    }
+    
+   
+
+  
+  
   shiftValue.value = Array.isArray(rosterDB.shifts)
-    ? rosterDB.shifts.map(({ shift }) => shift).join("\n")
-    : "";
+    ? rosterDB.shifts.map(({ shift }) => shift).join("\n"): "";
 
   hours.value = Number(rosterDB.hours) || 9;
   hourLabel.textContent =  hours.value 
   employeeValue.value = Array.isArray(rosterDB.employees)
-    ? rosterDB.employees
-        .map(({ employee }) => employee)
-        .join("\n")
-    : "";
+    ? rosterDB.employees.map(({ employee }) => employee).join("\n"): "";
+ 
 
+  
 
 } catch (error) {
-  console.error("Unable to load roster data:", error);
+  alert("Error message occurried while loading the data")
 
   rosterDB = {};
-  localStorage.removeItem("rosterDB");
+///  localStorage.removeItem("rosterDB");
 
-  alert(
-    "The saved roster data was invalid and has been reset."
-  );
+
 }
 
 
@@ -71,33 +110,18 @@ let yellowTable = null;
 const chosenMonth = getElem(".active-month")
  
 const weekRoster = getElem('.week-roster')
-const newEmpRow_1 = `
-     <tr>
-          <td>
-            <span class="add-emp-row">+</span>
-            <span class="remove-emp-row">-</span>
-            <input type="number" class="row-number" min="1" value="2" max="999">
-          </td>
-          <td class="shift-cell employee-name">Emp 1</td>
-          <td class="shift-cell">OFF</td>
-          <td class="shift-cell">OFF</td>
-          <td class="shift-cell">OFF</td>
-          <td class="shift-cell">OFF</td>
-          <td class="shift-cell">OFF</td>
-          <td class="shift-cell">OFF</td>
-          <td class="shift-cell">OFF</td>
-          <td>0</td>
-          <td class="range" title="One click to get one cell number, double click to get multiple cell number">1</td>
-      </tr>
-`
 
-weekRoster.insertAdjacentHTML("beforeEnd", newEmpRow_1)
-
-addWeekTable()
+inputBox.style.display = sessionData.showInputOutput ? "block" : "none"
+getElem("#hide-input-output").textContent = sessionData.showInputOutput ? "Hide Input/Output" : "Show Input/Output"
+getElem("#utility-icon").style.display =  sessionData.showInputOutput ? "none" : "block"
+getElem("#hide-show-icons-label").textContent = sessionData.showInputOutput ? "Hide Side Icons" : "Show Side Icons"
 
 
-const curDate = new Date();
-chosenMonth.textContent = curDate.toLocaleDateString("en-ZA", {month:"long", year:"numeric"})
+const curDate = new Date()
+ 
+chosenMonth.textContent = sessionData.currentMonth || curDate.toLocaleDateString("en-ZA", {month:"long", year:"numeric"})
+
+delim.textContent = sessionData?.delimiter || ","
 
 
 
@@ -113,6 +137,8 @@ if (splt.tagName !== "SPAN") return
  
   cellValue.value = cellValue.value.replaceAll(tempDelim, splt.textContent)
   formulaResult.value = formulaResult.value.replaceAll(`${tempDelim}`, `${splt.textContent}`)
+  sessionStorage.setItem("rosterSession", JSON.stringify({ ...sessionData, delimiter: splt.textContent }))
+
   if(formulaResult.value)
   copyFormula()
 }
@@ -160,6 +186,7 @@ function updateRosterDays() {
 
   const startDayPos = colDays.findIndex( day => day == activeDays[0].textContent.match(/\w+/))
   const lastDayPos = colDays.findIndex( day => day ==  activeDays[activeDays.length-1].textContent.match(/\w+/))
+  const cols = getElems(".week-roster tr:first-child th")
 
    rosterConfig.startCellChar = `${cols[startDayPos+1]}`
    rosterConfig.startCellNum = startDayPos+1
@@ -215,8 +242,7 @@ rosterConfig.ph.forEach(holiday => {
   holiday.id = `day${new Date(holidayDate).getTime()}`;
 });
 
-const recentActivityBox = getElem("#active-history")
-recentActivityBox.textContent = ''
+
 let matchedDays = []
 
 for(let d = 0 ; d < dateCells.length; d++ ) {
@@ -275,7 +301,6 @@ daysID.forEach( ( id, x) => {
 })
   
 
-updateRanges() 
 
 
 } 
@@ -300,43 +325,8 @@ if (
     
 }
  
-function updateRanges() {
-  
-  const tables = getElems("table:has(.activeDate)")
-  const empRows = getElems(`.week-roster:first-child tr:has(.range)`)
-  weekOneStartRowNum = getElem('.week-roster:nth-child(1) .row-number')
-  weekTwoStartRowNum = getElem('.week-roster:nth-child(2) .row-number')
-   let rowNum = 2
-
-   for(let e = 0; e < empRows.length; e++ ) {
-    const cellVal = rosterConfig.startCellChar.split(":").map( c => c + Number(rowNum + e) ).join(":")
-    getElems(`.week-roster:first-child .range`)[e].textContent = cellVal
-  }
-
-  updateWeekOneRowNo()
-  updateWeekSecondRowNo()
-
- 
-}
- 
 
 
-function updateWeekOneRowNo() {
-    const startCellNum =  getElem(`.week-roster:nth-child(1) .row-number`).value 
-
-  const empRows = getElems(`.week-roster:first-child tr:has(.range)`)
-  let startNo = startCellNum -1
-
-  getElems(`.week-roster:first-child .range`).forEach((rangeCell, e)=> {
-
-    const cellVal = rosterConfig.startCellChar.split(":").map( c=>c+Number(startNo+1)).join(":")
-    rangeCell.textContent = cellVal
-    startNo++
-  })
-
-
-
-}
 getElem("#validate").addEventListener('click', cleanShifts)
 
 function cleanShifts() {
@@ -391,91 +381,59 @@ if (empl.length === 0) {
   return false
 }
 
-if (empl.length < 2) {
-  alert("At least 2 employee names are required")
-  employeeValue.focus()
-  return false
-}
 
 shiftValue.value = shiftData.join("\n")
 
-const oldShifts = new Map(
-    (rosterDB.shifts || []).map(shift => [shift.shift, shift])
-)
 
-rosterDB.shifts = shiftData.map((shift, index) => {
-
-    const old = oldShifts.get(shift);
-
+const shiftList = shiftData.map((shift, index) => {
     return {
         shift,
         shiftNo: `shift${index + 1}`,
-
-        allowance: old?.allowance ?? false,
-        shiftColor: old?.shiftColor ?? getRandomColor(),
-        fontColor: old?.fontColor ?? "#ffffff",
-        isNonFixedShift: old?.isNonFixedShift ?? /\d/.test(shift),
-        shiftRepeats: old?.shiftRepeats ?? []
+        shiftColor: getRandomColor(),
+        fontColor: "#ffffff",
+        isNonFixedShift: /\d/.test(shift),
+        shiftRepeats: [],
+        allowance:false
     };
 });
 
-
-rosterDB.hours = hours.value
+rosterDB = {}
+rosterDB.shifts = shiftList 
 const workers = empl.map( name => {
-  const objEmp = {employee: name.substring(0, 10)}
 
-  return objEmp
- 
-})
+  return  {employee: name.substring(0, 10)}
+}) 
 
-const oldEmployees = new Map(
-    (rosterDB.employees || []).map(emp => [emp.employee, emp])
-);
+rosterDB.employees = workers
+rosterDB.hours = hours.value 
+rosterDB.weekOneStartRowNo = 2 //Number(weekOneStartRowNum.value)
+rosterDB.weekTwoStartRowNo = shiftList.length + 3 //weekTwoStartRowNum.value
+rosterDB.settingName = 'Setting' + Date.now()
+rosterDB.settingID = Date.now()
+database.isNewSetting = true
 
-rosterDB.employees = empl.map(name => {
+sessionData.currentSetting = rosterDB
+sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
 
-    const employee = name.trim();
+renderNecessaryItems()
 
-    const old = oldEmployees.get(employee);
-
-    return {
-        employee,
-        workdays: old?.workdays ?? undefined
-    };
-});
-
-//rosterDB.totalNumberShiftsPerEmp = totalNumShiftPerEmp.value || 18
-rosterDB.weekOneStartRowNo =  getElem('.week-roster:nth-child(1) .row-number').value || 2
-rosterDB.weekTwoStartRowNo =  getElem('.week-roster:nth-child(2) .row-number').value || 19
-
-
- renderNecessaryItems()
-getElems(".dynamic-shift-row").forEach(row => row.remove())
-autoAddSavedEmpls()
-updateShiftSettingTb()
-restoreShiftSettingData()
-updateShiftRepeatValues()
-updateUnallowedShifts() 
-updateAllowedShifts()
+runAfterPassedValidation()
 rosterPeople()
- restoreShiftSettingData()
 
- 
-  return true
 
 }
-renderNecessaryItems()
 function renderNecessaryItems() {
 
   
   if (rosterDB.shifts) {
-    getElems("main>section").forEach(sec => sec.style.display = "block")
+    getElems("main>section:not(section:nth-child(2))").forEach(sec => sec.style.display = "block")
     getElems("#settings-option>ul>li")
     .forEach( (li, liId) => {
 
       if (liId > 6 ) return
       li.style.display = "block" 
     })
+     getElems("#action-buttons button").forEach( btn =>btn.style.display = "inline-block")
     return
   } 
 
@@ -492,21 +450,13 @@ function renderNecessaryItems() {
       li.style.display = "none" 
     })
 
+   
 
 }
 
 
-getElem("#save-data").addEventListener("click", saveData)
+getElem("#save-data").addEventListener("click", saveSettings)
 getElem("#save-settings").addEventListener("click", saveSettings)
-function saveData() {
-
-if (!cleanShifts()) return 
-  restoreShiftSettingData()
-  DB.save()
-  alert("                Successfully saved!!!")
- 
-
-}
 
 
 function deleteSavedDB() {
@@ -518,78 +468,174 @@ function deleteSavedDB() {
   if (conf) 
     DB.delete()
 }
+
+
+
+
+function runAfterPassedValidation() {
+
+  addWeekTables()
+  
+  updateRosterDays()
+ 
+  highlight()
+
+  addTotalHoursTable()
+
+  addYellowTable()
+
+
+
+  clearShiftsBlocks();
+
+  updateShiftSettingTb()
+  restoreShiftSettingData()
+  updateShiftRepeatValues()
+  restoreShiftSettingData()
+  
+  
+  updateUnallowedShifts()
+
+
+  getElem(".week-roster .row-number").addEventListener("change", updateWeekOneRowNo)
+  getElem(".week-roster:nth-child(2) .row-number").addEventListener("change", updateWeekSecondRowNo)
+
+  
+  updateWeekOneRowNo()
+ updateWeekSecondRowNo()
+  renderNecessaryItems()
+  
+    
+}
+
+  
+function updateWeekOneRowNo() {
+    const Wk1RowNumOne = getElem(".week-roster .row-number") 
+    const Wk1RowNums = getElems(".week-roster:first-child .row-number")
+
+  const startNum = Number(Wk1RowNumOne.value)
+  Wk1RowNums.forEach( (rowNum, i) => {
+
+    if (i == 0 ) return
+    rowNum.disabled = true
+    
+
+    rowNum.value = startNum + i
+
+
+  } )
+
+  rosterDB.weekOneStartRowNo = Wk1RowNumOne.value 
+ const Wk2RowNumOne = getElem(".week-roster:nth-child(2) .row-number") 
+
+ Wk2RowNumOne.value = Number(getElem(".week-roster tr:last-child .row-number").value)+3
+  updateWeekSecondRowNo()
+
+
+ rosterDB.weekOneStartRowNo = Wk1RowNumOne.value 
+ rosterDB.weekTwoStartRowNo = Wk2RowNumOne.value
+ sessionData.currentSetting = rosterDB
+ sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
+
+
+
+}
 function updateWeekSecondRowNo() {
 
  
-    const tables = getElems("table:has(.activeDate)")
-    const startCellNum = Number(getElem(`.week-roster:nth-child(1) .row-number`).value)
-    const secondCellNum =  Number(getElem(`.week-roster:nth-child(2) .row-number`)?.value)
- 
-  const empRows = getElems(`.week-roster:first-child tr:has(.range)`)
- 
-  getElems(`.range`).forEach(range => range.textContent = "")
-  updateWeekOneRowNo()
-  const rangeDiff = secondCellNum - startCellNum 
-
-
-    const charThs = getElems(".week-roster tr:first-child th")
-    const startChar = charThs[2].textContent
-    const endChar = charThs[8].textContent
-
- 
-   let presRowNum = startCellNum
-   //Number( getElem(`.week-roster:nth-child(${1+tb}) .range`).textContent.match(/\d+/g)[0]||0)
-
-  for(let tb = 0; tb < tables.length-1; tb++) {
-
-    empRows.forEach((row, e) =>{
-   
-      const rowNum = presRowNum + e
-      const cellVal = `${tb > 0 ? cols[1]:rosterConfig.startCellChar }${rowNum}:${endChar}${ rowNum}`
-      getElems(`.week-roster:nth-child(${1+tb}) .range`)[e].textContent = "="+cellVal
-      getElems(`.week-roster:nth-child(${1+tb}) .row-number`)[e].value = rowNum
-     
-      if ( rosterDB?.employees ) {
-        const workers = rosterDB?.employees.map(({employee}) => employee )
-        getElems(`.week-roster:nth-child(${1+tb}) .employee-name`)[e].textContent = workers[e]|| "Employee "+ Number(e+1)
-    
-        
-      }
-       const weekOneRange = getElem(`.week-roster .row-number`)
-      const weekTwoRange = getElem(`.week-roster:nth-child(2) .row-number`)
-    
-      if(  weekOneRange.value != rowNum && weekTwoRange.value != rowNum)
-        getElems(`.week-roster:nth-child(${1+tb}) tr td:has(.add-emp-row)`)[e].style.setProperty("--before-content", `"${rowNum}"`)
-      
-        getElems(`.week-roster:nth-child(${1+tb}) tr:has(.add-emp-row)`)[e].setAttribute("class", `rowId${e}`)
-
-    })
-    presRowNum =  rangeDiff + Number( getElem(`.week-roster:nth-child(${1+tb}) .range`).textContent.match(/\d+/g)[0]||0)
-    
-   
-  }
+  const Wk2RowNumOne = getElem(".week-roster:nth-child(2) .row-number") 
+  const Wk2RowNums = getElems(".week-roster:nth-child(2) .row-number")
   
-   empRows.forEach((row, e) =>{
-   
-      const rowNum = presRowNum + e
-      const cellVal = `${startChar}${rowNum}:${rosterConfig.lastCellChar}${ rowNum}`
-      getElems(`.week-roster:nth-child(${tables.length}) .range`)[e].textContent = "="+ cellVal
-      getElems(`.week-roster:nth-child(${tables.length}) .row-number`)[e].value = rowNum
-       
-   
-     
-       getElems(`.week-roster:nth-child(${tables.length}) tr td:has(.add-emp-row)`)[e].style.setProperty("--before-content", `"${rowNum}"`)
 
-   
-       getElems(`.week-roster:nth-child(${tables.length}) tr:has(.add-emp-row)`)[e].setAttribute("class", `rowId${e}`)
-        if ( rosterDB?.employees ) {
-          const workers = rosterDB.employees.map(({employee})=> employee )
-            getElems(`.week-roster:nth-child(${tables.length}) .employee-name`)[e]
-            .textContent = workers[e] || "Employee "+ Number(e+1)
+  const startNum = Number( Wk2RowNumOne.value) 
 
-        }
-    })
+  rosterDB.weekTwoStartRowNo = startNum
+  sessionData.currentSetting = rosterDB
+
+  sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
+  let lastRowNum = 0
+  Wk2RowNums.forEach( (rowNum, i) => {
+
+    const rowNo = startNum + i
+    if (i == 0 ) return
+
+    rowNum.value = rowNo
+    rowNum.disabled = true
+
+    if (i === Wk2RowNums.length-1) {
+      lastRowNum = Number(getElem(".week-roster:nth-child(2) tr:last-child .row-number").value)
+    }
+
+  } )
   
+  const wk3RowNos = getElems(".week-roster:nth-child(3) .row-number")
+  
+  wk3RowNos.forEach( (rowNum, i) => {
+
+    const rowNo = i + lastRowNum + 3
+
+    rowNum.value = rowNo
+    rowNum.disabled = true
+
+
+    if (i === wk3RowNos.length-1) {
+      lastRowNum = Number(getElem(".week-roster:nth-child(3) tr:last-child .row-number").value)
+    }
+
+  } )
+
+
+    const wk4RowNos = getElems(".week-roster:nth-child(4) .row-number")
+  
+  wk4RowNos.forEach( (rowNum, i) => {
+
+    const rowNo = i + lastRowNum + 3
+
+    rowNum.value = rowNo
+    rowNum.disabled = true
+
+
+    if (i === wk4RowNos.length-1) {
+      lastRowNum = Number(getElem(".week-roster:nth-child(4) tr:last-child .row-number").value)
+    }
+
+  } )
+
+
+const wk5RowNos = getElems(".week-roster:nth-child(5) .row-number")
+  
+  wk5RowNos.forEach( (rowNum, i) => {
+
+    const rowNo = i + lastRowNum + 3
+
+    rowNum.value = rowNo
+    rowNum.disabled = true
+
+
+    if (i === wk5RowNos.length-1) {
+      lastRowNum = Number(getElem(".week-roster:nth-child(5) tr:last-child .row-number").value)
+    }
+
+  } )
+
+
+  const wk6RowNos = getElems(".week-roster:nth-child(6) .row-number")
+  
+  wk6RowNos.forEach( (rowNum, i) => {
+
+    const rowNo = i + lastRowNum + 3
+    rowNum.value = rowNo
+    rowNum.disabled = true
+
+
+
+ 
+  } )
+    
+ 
+
+ 
+    
 
 } 
 
@@ -602,37 +648,6 @@ function clearShiftInput() {
 
 }
 
- 
-
-
-function getOneCellNum(event) {
- const cellNum = event.target.nextElementSibling.textContent 
- cellValue.value = cellNum.replace(/=/g,"")
-
-   getStandardShiftFormula()
-}
-
-
-function addWeekTable() {
-for(let t = 0; t< 5; t++) {
-  getElem("#roster-tables")
-  .insertAdjacentHTML('beforeEnd', weekRoster.outerHTML)
-
-}
-
-
-getElem('.week-roster:nth-child(1) .row-number').value = rosterDB?.weekOneStartRowNo || 2
- getElem('.week-roster:nth-child(2) .row-number').value = rosterDB?.weekTwoStartRowNo || 18
- 
- updateRosterDays()
- updateYellow()
- getElems("#shift-settings .dynamic-shift-row")
-    .forEach(row => row.remove())
- updateShiftSettingTb()
- 
-
-
-}
 
 
 function formatCellDate(date) {
@@ -643,8 +658,8 @@ function formatCellDate(date) {
 
 getElem(".next-month").addEventListener("click", getNextMonth)
 getElem("#next-month").addEventListener("click", getNextMonth)
-getNextMonth()
-getPresMonth()
+
+
 function getNextMonth() {
   
   const newDate = new Date(chosenMonth.textContent)
@@ -656,7 +671,8 @@ function getNextMonth() {
   updateRosterDays()
   highlight()
 
-
+  sessionData.currentMonth = chosenMonth.textContent
+  sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
 
  
 }
@@ -672,7 +688,10 @@ function getPresMonth() {
   clearShiftsBlocks();
 updateRosterDays()
 highlight()
- 
+
+sessionData.currentMonth = chosenMonth.textContent
+sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
+
 }
 
 function verifyMonth() {
@@ -690,7 +709,7 @@ function verifyMonth() {
   }
 }
 
-getElem('.week-roster:nth-child(1) .row-number').addEventListener("input", updateWeekOneStartRowNum)
+
 function updateWeekOneStartRowNum() {
   const rangeOne = getElem('.week-roster:nth-child(1) .row-number')
   if(rangeOne.value >20 || rangeOne.value == 0) {
@@ -700,162 +719,233 @@ function updateWeekOneStartRowNum() {
 
 
   rosterDB.weekOneStartRowNo = rangeOne.value
+  
   updateNewEmpRow()
-  updateRanges()
+  
   
 }
 
-weekTwoStartRowNum.addEventListener("input", updateWeekTwoStartRowNum) 
+
 
 function updateWeekTwoStartRowNum() {
-  if (weekTwoStartRowNum.value.length > 2) {
+  if (weekTwoStartRowNum.value > 2) {
       weekTwoStartRowNum.value  = ( rosterDB.employees.length || 0 ) + 3
   }
   rosterDB.weekTwoStartRowNo = getElem('.week-roster:nth-child(2) .row-number').value
- 
+ alert()
 }
 
-function addEmpRow(event) {
+
+function addWeekTables() {
+
+
+ let week = `
  
- updateNewEmpRow()
- const rows = getElems(".week-roster:first-child .add-emp-row")
- const weekOneLastRowNo = getElem(".week-roster:first-child tr:last-child .row-number")
+<table class="week-roster">
+      
+        <tr>  
+          <th>Row No</th>
+          <th>A</th>
+          <th>B</th>
+          <th>C</th>
+          <th>D</th>
+          <th>E</th>
+          <th>F</th>
+          <th>G</th>
+          <th>H</th>
+          <th>I</th>
+        </tr>
+        <tr>
+          <th></th>
+          <th>Employees</th>
+          <th class="day-cell">Mon</th>
+          <th class="day-cell">Tue</th>
+          <th class="day-cell">Wed</th>
+          <th class="day-cell">Thu</th>
+          <th class="day-cell">Fri</th>
+          <th class="day-cell">Sat</th>
+          <th class="day-cell">Sun</th>
+          <th class="week-number">Week 1</th>
+      </tr>
+       
+ `
+
+ 
+const  emplpyeeRows= rosterDB.employees.map( obj => {
+  
+  return `
+     <tr>
+          <td>
+            <input type="number" class="row-number" min="1" value="2" max="500">
+          </td>
+          <td class="shift-cell employee-name">${obj.employee}</td>
+          <td class="shift-cell">OFF</td>
+          <td class="shift-cell">OFF</td>
+          <td class="shift-cell">OFF</td>
+          <td class="shift-cell">OFF</td>
+          <td class="shift-cell">OFF</td>
+          <td class="shift-cell">OFF</td>
+          <td class="shift-cell">OFF</td>
+          <td>0</td>
+        
+      </tr>
+`}).join("")
+
+week += emplpyeeRows + "</table>"
+
+getElem("#roster-tables").innerHTML= week.repeat(6)
+//getElem(".week-roster:nth-child(2) .row-number").value = rosterDB.employees.length + 4
+
+getElems(".week-roster tr td:last-child").forEach( hoursTD => hoursTD.addEventListener("click", getStandardShiftFormula ) )
+    
 
 
-if ( weekOneLastRowNo.value >=  weekTwoStartRowNum.value-1) {
 
-  alert(`Row ${weekTwoStartRowNum.value} cannot be less or equal to row ${weekOneLastRowNo.value}.The gap must be more than 2.`)
-
-  return
 }
 
- if (rows.length >= 20 ) {
-    alert("Sorry, a limit has been to 20 rows")
-    return
- }
+function addAllowanceTable() {
 
-//weekRoster
- const target = event.target.parentElement.parentElement
-  target.insertAdjacentHTML("afterEnd", newEmpRow_1)
+   if (!rosterDB.employees) {
+    return 
+   }
+
+   const allowanceTb = getElem("#allowanceTb")
+
+    if (allowanceTb) {
+
+      allowanceTb.remove()
+    }
+   
+  let table = `
+  <table id="allowanceTb" onclick="getAllowanceTbFormula()">
+     <tr>
+       <th>Employee</th>
+       <th>Allowance</th>
+       <th>Total hours</th>
+     </tr>
+     
+        `
+
+    const empRows = rosterDB.employees.map(({employee})=>{
+
+      return `
+      <tr> 
+        <td class="employee-name">${employee}</td>
+        <td> 0 </td>
+        <td> 0 </td>
+      </tr>
+      `
+    }).join("")
+
+    table+= empRows + "</table>"
+
+
+    getElem("main>section:last-child").insertAdjacentHTML("beforeend", table)
+   
+
+    
+
+}
+
+
+function getAllowanceTbFormula(event) {
+
+  const target = event.target
+
+ if (target.cellIndex == 0 || target.tagName === "TH") return
  
-  const trIndex = [...getElems('.week-roster tr')].indexOf(target)
- for(let r = 1; r <getElems(".week-roster").length ; r++)     
-     getElems(`.week-roster`)[r].rows[trIndex].insertAdjacentHTML("afterEnd", newEmpRow_1)
-
- updateNewEmpRow()
-
- const totalHoursTb = getElem("#total-hours-tb")
- const totalHoursRow = getElem("#total-hours-tb tr:has(.employee-name)").outerHTML
-
-totalHoursTb.insertAdjacentHTML('beforeEnd', totalHoursRow)
-updateYellow()
-updateTotalHoursTb()
+ //later
 
 
 
 }
+
 
 hours.onchange =()=> rosterDB.hours = hours.value
  
-function updateYellow() {  
+function addYellowTable() {  
 
- if (!rosterDB?.shifts?.length) return;
-  const totalHoursRow = getElems("#total-hours-tb tr:has(.employee-name)")
-  const yellowTbBox = getElem("#yellow-tb-box")
- getElem("#yellow-tb-box").innerHTML = ""
-  const yellowTB = `
-        <table id="yellow-table">
-          <tr>
-             <th>Employee</th>
-             <th>Sat</th>
-             <th>Sun</th>
-             <th class="off">OFF</th>
-             <th>No. of Shifts</th>
-          </tr>
-         </table>`
+ if (!rosterDB?.shifts?.length && !rosterDB.employees) return;
 
-   
-   yellowTbBox.innerHTML = yellowTB
-   yellowTable = getElem("#yellow-table")
-  for(let s = rosterDB.shifts.length-1; s >=0 ; s-- ) {
-    getElem("#yellow-table th:nth-child(1)")
-    .insertAdjacentHTML('afterEnd',`<th>${rosterDB.shifts.map( ({shift}) => shift )[s]}</th>`)
+  if ( getElem("#yellow-table") ) {
+      
+    getElem("#yellow-table").remove()
+      
   }
 
 
+  const yellowTB = document.createElement("table")
+  yellowTB.id = "yellow-table"
+  const shiftLen = rosterDB.shifts.length+5
+  let yTb_th = `<tr><th colspan="${shiftLen}">Yellow Table</th></tr>
+  <tr><th>Employee</th>`
 
-const YellowTbCols =  getElems("#yellow-table tr:first-child th")
-const yellowTBtd ='<tr><td class="employee-name">emp</td>' +'<td>0</td>'.repeat(YellowTbCols.length-1)+'</tr>'
+  rosterDB.shifts.forEach(({shift, shiftNo}) =>{
 
-for(let y = 0; y < totalHoursRow.length; y++)
-  yellowTable.insertAdjacentHTML("beforeEnd", yellowTBtd)
-  yellowTable.insertAdjacentHTML('afterbegin', `<tr><th colspan="${getElems("#yellow-table tr:first-child th").length}">Yellow Table</th></tr>`)
+    yTb_th += `<th class="${shiftNo}">${shift}</th>`
 
-YellowTbCols.forEach((th, x) => {
+  } )
 
-    if (x === 0) return;
-
-    if (x > rosterDB.shifts.length) return;
-
-    th.classList.add(`shift${x}`)
-})
-
- updateTotalHoursTb()
-
- 
-}
-
-function updateTotalHoursTb() {
-
-  if ( !rosterDB.shifts.length ) return
-  const totHrsRowEmps = getElems("#total-hours-tb .employee-name")
-  const yellowTbEmps = getElems("#yellow-table .employee-name")
+             
+  yTb_th += "<th class='off'>OFF</th><th>Sat</th><th>Sun</th><th>No of Shifts</th></tr>" 
   
-   for (let e = 0; e < totHrsRowEmps.length; e++) {
-       const employee = getElems('.employee-name')[e].textContent
-        totHrsRowEmps[e].textContent = employee
-        yellowTbEmps[e].textContent = employee
-      }
-
-   getElem("#yellow-table").addEventListener("click", getYellowTableFormulas )
-   
- 
-}
- 
-function removeEmpRow(event) {
- 
-  if(getElems(".week-roster:first-child .remove-emp-row").length == 1) {
-     
-    alert("Atleast one row is required.")
+  const employees = rosterDB.employees.map(({employee})=>employee)
+  for(let employee of employees ) {
+    yTb_th += `
     
-    return
+    <tr><td class="employee-name">${employee}</td>
+    `+`<td>0</td>`.repeat(shiftLen-1)+'</tr>'
+
+
   }
-  const target = event.target.parentElement.parentElement
 
-  const trIndex = [...getElems('.week-roster tr')].indexOf(target)
+  yellowTB.innerHTML = yTb_th
 
- for(let r = 1; r < getElems(".week-roster").length; r++) 
-     getElems(`.week-roster`)[r].rows[trIndex].remove()
- target.remove()
+  getElem("#below-totalhours-tb").insertAdjacentHTML("afterend",yellowTB.outerHTML)
+  getElem("#yellow-table").addEventListener('click', getYellowTableFormulas)
+  
 
-  getElem("#total-hours-tb tr:has(.employee-name):last-child").remove()
-  getElem('.row-number').value = rosterDB.weekOneStartRowNo 
-  getElem('.week-roster:nth-child(2) .row-number').value = rosterDB.weekTwoStartRowNo
-  updateNewEmpRow()
-  updateTotalHoursTb()
 }
-updateNewEmpRow()
-function updateNewEmpRow() {
-    getElems(".add-emp-row").forEach( newEmpRow => newEmpRow.addEventListener("click", addEmpRow))
-    getElems(".remove-emp-row").forEach( newEmpRow => newEmpRow.addEventListener("click", removeEmpRow))
-    getElems(".range").forEach(rangeCell => rangeCell.previousElementSibling.addEventListener('click', getOneCellNum))
-    getElem(`.week-roster:first-child .row-number`).addEventListener('input',  updateWeekSecondRowNo )
-    getElem(`.week-roster:nth-child(2) .row-number`).addEventListener('input', updateWeekSecondRowNo)
-    weekOneStartRowNum = getElem('.week-roster:nth-child(1) .row-number')
-    weekTwoStartRowNum = getElem('.week-roster:nth-child(2) .row-number')
-    updateRanges()
-   
+
+
+
+function addTotalHoursTable() {
+
+
+  if (!rosterDB.employees) {
+
+    return 
+  }
+
+  getElems("#total-hours-tb  tr:has(td)").forEach( tr => tr.remove() ) 
+
+  const table = getElem("#total-hours-tb") 
+
+
+const empRows = rosterDB.employees.map( ({employee})=>{
+
+  return `
+  <tr>
+    <td class="employee-name">${employee}</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  
+  `
+}).join("")
+
+
+table.insertAdjacentHTML("beforeend", empRows)
+
+table.addEventListener("click", getTothoursFormula)
+
 }
+
 
 hours.addEventListener('change', validateHours)
  
@@ -867,11 +957,39 @@ function validateHours(event) {
           hour.value = 10;
     }
 }
-function getStandardShiftFormula() {
+function getStandardShiftFormula(event) {
+  const target = event.target
+  const tdNum =  event.target.parentElement.querySelector(".row-number").value 
+ 
+  let tableIndex = 0
+ for(let i = 0; i < rosterConfig.totWeeksShown; i++) {
+    const weekRoster = [...getElems(".week-roster")[i].rows].includes(target.parentElement) 
+   
+    if (weekRoster) {
+      tableIndex = i
+      break
+    }
+  
+  }
 
+  let cellPos = ``
+  const tdCols = getElems(".week-roster:first-child tr:first-child th")
+  if ( tableIndex == 0 ) {
+
+    cellPos = `${tdCols[rosterConfig.startCellNum+1].textContent}${tdNum}:H${tdNum}`
+
+  } else if (tableIndex >0 && tableIndex < rosterConfig.totWeeksShown-1 ) {
+       cellPos = `B${tdNum}:H${tdNum}`
+
+  } else {
+    cellPos = `B${tdNum}:${tdCols[rosterConfig.lastCellNum+1].textContent}${tdNum}`
+
+  }
+
+  
  if ( verifyMonth() ) return 
   const shifts = rosterDB.shifts.map(({shift}) => shift)
-  const cellNum = cellValue.value
+  const cellNum = cellPos
   const hr = hours.value 
 
   shiftValue.value = shifts.join("\n")
@@ -885,146 +1003,154 @@ copyFormula()
 
  
 
-function getYellowTableFormulas(event) {
-  if ( verifyMonth() ) return 
-  const cell = event.target 
-  if (cell.tagName !== "TD" ) return 
-
-  const rowPos = {trNo: cell.parentElement.rowIndex, tdNo: cell.cellIndex}
-  const yellowTbs = getElems(".week-roster:has(tr th.activeDate)")
-  const tdCols = getElems(`#yellow-table tr:last-child td`)
-  const yellowTb = (".week-roster:has(.activeDate)")
-  let formula = '';
-  formulaResult.value = '';
-  cellValue.value = ""
-  shiftValue.value = ""
-  let cellRanges = ""
-
-
-
-  if (rowPos.tdNo == 0 || cell.textContent == "SUM" ) return
-     const shiftHeader = getElems("#yellow-table tr:first-child th")[rowPos.tdNo + 1]
-
-if (!shiftHeader) return;
-    const shift = shiftHeader.textContent
-     shiftValue.value = shift
-
-  if ( /Sat|Sun|No. of Shifts/.test(shift) ) {
-
-     if(shift === "Sat") {
-            
-       shiftValue.value =  "Saturday"
-        for( let r = 0; r < rosterConfig.totWeeksShown ; r++) {
-           const posY = rowPos.trNo - 1
-           const rangeY = getElems(`.week-roster tr:nth-child(${posY}) .range`)[r].textContent
-           
-           const firstChar = rangeY.match(/[A-Z]/)[0]
-           const firstNum = rangeY.match(/[0-9]{1,}/g)[0]
-
-           if (cols.indexOf(firstChar) <= 6 && r < rosterConfig.totWeeksShown-1)
-              cellRanges += cols[6]+rangeY.match(/\d+/)[0]+','
-
-           if ( rosterConfig.lastCellNum >=6 && r == rosterConfig.totWeeksShown-1)
-               cellRanges += cols[6]+rangeY.match(/\d+/)[0]+','
-            
-          }
-      }
-
-    if(shift === "Sun") {
-      shiftValue.value =  "Sunday"
-          for( let r = 0; r < rosterConfig.totWeeksShown ; r++) {
-           const posY = rowPos.trNo - 1
-           const rangeY = getElems(`.week-roster tr:nth-child(${posY}) .range`)[r].textContent
-           
-           const firstChar = rangeY.match(/[A-Z]/)[0]
-           const firstNum = rangeY.match(/[0-9]{1,}/g)[0]
-
-           if (r < rosterConfig.totWeeksShown-1)
-              cellRanges += cols[7]+rangeY.match(/\d+/)[0]+','
-
-           if ( rosterConfig.lastCellNum >=7 && r === rosterConfig.totWeeksShown - 1)
-               cellRanges += cols[7]+rangeY.match(/\d+/)[0]+','
-
-       }
-       
-        
-     }
-
-  if(shift === "No. of Shifts") {
-    const employee = getElem(`#yellow-table`).rows[rowPos.trNo].cells[0].textContent
-     shiftValue.value += `\n1. In "No. of Shifts" cell for employee "${employee}", enter =sum( \n`
-     shiftValue.value += `2. Press and hold ctrl key \n`
-     shiftValue.value += `3. Click all cells (one by one) that have payable shifts (including Sick, leave) \n`
-     shiftValue.value += `4. When you you are done, release ctrl key \n`
-     shiftValue.value += `5. Close your = sum function by adding ) then press enter key\n`
-     shiftValue.value += `eg. =sum(K16;L16;M16;N16;O16), your formula will differ based on the possition of your Yellow table  `
-      
-    return
-   
-    }
-     
-    cellRanges = cellRanges.replace(/\,$/,"")
-    cellValue.value ="="+cellRanges
-
-    cellRanges = cellRanges.split(',')
-
-    for(let cellV of cellRanges)
-        formula+=`+countifs(${cellV}${delim.textContent}"<>off"${delim.textContent} ${cellV}${delim.textContent} "<>")`
-
-
- }else{
-     
-  for( let r = 0; r < rosterConfig.totWeeksShown ; r++) {
-      const posY = rowPos.trNo-1
-      cellRanges += getElems(`.week-roster tr:nth-child(${posY}) .range`)[r].textContent
-  }
+function getTothoursFormula(event) {
+   const target = event.target
   
-    cellRanges = cellRanges.replace(/=/g, `${delim.textContent}`).replace(/\W/,"").split(delim.textContent)
-    cellValue.value = cellRanges
+   if (target.tagName !== "TD" || 
+    target.cellIndex === 0 
+   
+  
+  ) return 
 
-    for(let cellV of cellRanges)
-      formula+=`+countif(${cellV}${delim.textContent}"${shift}")`
+   const cellPos = target.cellIndex
+   const rowPos = target.parentElement.rowIndex
+
+   if ( target.cellIndex !== 7) {
+     const weekV = getElem(`.week-roster:nth-child(${cellPos}) tr:nth-child(${rowPos+1}) .row-number`).value
+
+     formulaResult.value = `=I${weekV}` 
+   } else {
+
+      let sumForm = ""
+      getElems(`.week-roster tr:nth-child(${rowPos+1}) .row-number`).
+      forEach( cellNum => {
+          sumForm += `+I${cellNum.value}`
+
+      })
+
+      formulaResult.value = sumForm.replace("+","=")
+
+   }
+
+
+    copyFormula()
 }
 
+
+
+function getYellowTableFormulas(event) {
+  const target = event.target
+
+    if (target.tagName !== "TD" || 
+    target.cellIndex === 0 
+   
   
-  formulaResult.value = formula.replace('+','=')  
+  ) return 
+
+   const tdCols = getElems(".week-roster:first-child tr:first-child th")
+   const shiftValues = getElems("#yellow-table tr:nth-child(2) th")
+   const cellPos = target.cellIndex
+   const rowPos = target.parentElement.rowIndex
+   const shift = shiftValues[cellPos].textContent.toLowerCase()
+   
+   copyStatus.textContent = rowPos
+
+   let formula = ""
+
+  
+      
+    const headerChar = getElems(`.week-roster tr:nth-child(${rowPos+1})`)
+    const rows = getElems(`.week-roster tr:nth-child(${rowPos+1})`)
+
+
+    if (shift === "no of shifts") {
+
+      alert(`Please add this one manually for now, use =sum(), I will automate this one later ` )
+      return
+    }
+   rows.forEach( (row, rowID)=> {
+     const weekNum = [...getElems(".week-roster")].findIndex( wk =>wk.contains(row))
+     const cells = [...row.cells]
+    
+    const rowNum = row.cells[0].children[0].value
+    
+    const wk1CellChar = tdCols[rosterConfig.startCellNum + 1].textContent
+    const lastWkCellChar = tdCols[rosterConfig.lastCellNum + 1].textContent
+    let cellNum = ''
+
+    const fixedShift = ["sat","sun","no of shifts"]
+    
+ 
+    if (!fixedShift.includes(shift)) {
+         if (rowID === 0) {
+            cellNum = `${wk1CellChar}${rowNum}:H${rowNum}`     
+
+          } else if (rowID > 0 & rowID <rosterConfig.totWeeksShown- 1) {
+
+            cellNum = `B${rowNum}:H${rowNum}`     
+          
+          }else if (rowID === rosterConfig.totWeeksShown - 1)  {
+               cellNum = `B${rowNum}:${lastWkCellChar}${rowNum}` 
+          
+          }
+
+          formula += `+COUNTIF(${cellNum}${delim.textContent}"${shift}")` 
+    }
+
+    if (shift === "sat") 
+      formula += `+countifs(G${rowNum}${delim.textContent} "<>off"${delim.textContent} G${rowNum}${delim.textContent} "<>")` 
+
+    if (shift === "sun") 
+      formula += `+countifs(H${rowNum}${delim.textContent} "<>off"${delim.textContent} H${rowNum}${delim.textContent} "<>")` 
+
+     if (shift === "no of shifts") 
+      formula += `Please add this manually for now, I sort out later |` 
+
+
+    
+
+
+   })
+ 
+ 
+
+  formulaResult.value = formula.replace("+","=")
   copyFormula()
 
- 
-
   
 }
  
+
 
 async function copyFormula() {
-  const formula = formulaResult.value.trim();
+    const formula = formulaResult.value.trim();
 
-  if (!formula) {
-    alert("There is no formula to copy.");
-    return;
-  }
+    if (!formula) {
+        alert("There is no formula to copy.");
+        return;
+    }
 
-  try {
-    await navigator.clipboard.writeText(formula);
-     formula.select();
-  } catch (error) {
-     formulaResult.select()
-     document.execCommand("copy")
-  
-  
+    try {
+        await navigator.clipboard.writeText(formula);
+        formulaResult.select();
+    } catch (error) {
+       
 
-  }
+   
+        formulaResult.select();
+
+        const copied = document.execCommand("copy");
+
+        if (!copied) {
+            alert("Unable to copy the formula.");
+        }
+    }
+
+
+    copyStatus.textContent = "Copied successfully!"
+    setTimeout(()=>copyStatus.textContent = '.', 1000)
 }
 
-autoAddSavedEmpls()
-function autoAddSavedEmpls() {
-  if(!rosterDB?.employees) return
-
-const existCols =getElems(`.week-roster:nth-child(1) tr:has(.row-number)`).length
-const employeeLen = rosterDB?.employees.length  || 0
-  for(let e = 0; e <employeeLen-existCols; e++)
-    getElem("span.add-emp-row:first-child").click()
-}
 
 getElem("#copy").onclick = copyFormula
 
@@ -1123,11 +1249,11 @@ function nonStdShift(event) {
     
     
 }
-highlight()
+//highlight()
 function highlight() {
 
 //startCellChar,C,startCellNum,2,lastCellChar,D,lastCellNum,3
-for(let u = 2; u <= 10 ; u++ ) {
+for(let u = 2; u < 10 ; u++ ) {
    for(let r = 2 ; r< getElems(`.week-roster:first-child tr`).length; r++)  {
     const table = getElem(`.week-roster`) 
     if ( getElem(`.week-roster`) )
@@ -1148,16 +1274,24 @@ for(let u = 2; u <= rosterConfig.startCellNum ; u++ ) {
    for(let r = 2 ; r < weekRows.length; r++) {
       const table = getElem(`.week-roster`)
       if ( table )
+      //  table.rows[r].cells[u].textContent = "-"
           table.rows[r].cells[u].style.background = "lightgrey"
    }  
 
 }
 
 for(let u = rosterConfig.lastCellNum+2; u < 9 ; u++ ) {
-   for(let r = 2 ; r< getElems(`.week-roster:first-child tr`).length; r++)  
-    getElem(`.week-roster:nth-child(${rosterConfig.totWeeksShown})`).rows[r].cells[u].style.background = "lightgrey"
+   for(let r = 2 ; r< getElems(`.week-roster:first-child tr`).length; r++) {
+
+   //  getElem(`.week-roster:nth-child(${rosterConfig.totWeeksShown})`).rows[r].cells[u].textContent = "-"
+     getElem(`.week-roster:nth-child(${rosterConfig.totWeeksShown})`).rows[r].cells[u].style.background = "lightgrey"
+
+   } 
+
 
 }
+
+clearShiftsBlocks() //check later, this should work within this function
 rosterConfig.isMonthCorrect = false
 }
 
@@ -1189,6 +1323,8 @@ if (getElem("#settings-option").style.display === "none") return
  
 function rosterPeople() {
 
+
+  
     if (!rosterDB?.shifts?.length || !rosterDB?.employees?.length) {
         alert("Please load employees and shifts first.");
         return;
@@ -1209,7 +1345,7 @@ function rosterPeople() {
     )
 
     if (!nonFixedShifts.length) {
-        alert("No non-fixed shifts selected.");
+       
         return;
     }
 
@@ -1391,6 +1527,8 @@ function rosterPeople() {
 
     tables.forEach((table, weekIndex) => {
 
+        
+      
 
         for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
 
@@ -1557,91 +1695,62 @@ function rosterPeople() {
     });
 
 
-    getEmployeesTotalHrs()
+   getEmployeesTotalHrs()
 }
 getElem("#other").addEventListener("click", clearShiftsBlocks)
 
 function clearShiftsBlocks() {
-
-    if (!rosterDB?.shifts?.length) {
-        return;
-    }
+    if (!rosterDB?.shifts?.length) return;
 
     const tables = [...getElems(".week-roster")];
+    if (!tables.length) return;
 
-    if (!tables.length) {
-        return;
-    }
-
-  
- 
-    const nonFixedShiftNos = new Set(
-        rosterDB.shifts
-            .filter(shift => shift.isNonFixedShift === true)
-            .map(shift => shift.shiftNo)
+    const nonFixedShifts = rosterDB.shifts.filter(
+        shift => shift.isNonFixedShift === true
     );
 
- 
+    const startDay = Math.max(
+        0,
+        Number(rosterConfig.startCellNum || 1) - 1
+    );
+
+    const lastDay = Math.min(
+        6,
+        Number(rosterConfig.lastCellNum || 7) - 1
+    );
+
     tables.forEach((table, weekIndex) => {
-  
-
-        for ( let rowIndex = 2; rowIndex < table.rows.length; rowIndex++ ) {
-
+        for (let rowIndex = 2; rowIndex < table.rows.length; rowIndex++) {
             const row = table.rows[rowIndex];
-
            
+          
+            for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+                if (weekIndex === 0 && dayIndex < startDay) continue;
 
-            if (!row) {
-                continue;
-            }
+                if (
+                    weekIndex === tables.length - 1 &&
+                    dayIndex > lastDay
+                ) continue;
 
-            for ( let dayIndex = 0; dayIndex < 7; dayIndex++ ) {
+                const cell = row.cells[dayIndex + 2];
+                if (!cell) continue;
 
-                
+                const assignedShift = nonFixedShifts.find(
+                    shift => cell.classList.contains(shift.shiftNo)
+                );
 
-                if (weekIndex === 0 && 
-                  dayIndex < Number(rosterConfig.startCellNum) - 1) {
+                // Keep fixed shifts and unrelated cell content unchanged.
+                if (!assignedShift) continue;
 
+                cell.textContent = "OFF";
+                cell.style.background = "rgb(65, 221, 125)";
+                cell.style.color = "#000";
+                cell.style.cursor = "";
 
-                    continue;
-                }
-
-
-       
-                if ( weekIndex === rosterConfig.totWeeksShown - 1 && 
-                  dayIndex >  Number(rosterConfig.lastCellNum) - 1 ) {
-  
-                    continue;
-                }
-
-
-                const cellIndex = dayIndex + 2;
-
-                const cell = row.cells[cellIndex];
-
-                if (!cell) {
-                    continue;
-                } 
-
-                    cell.textContent = "OFF";
-
-                    cell.style.background = "rgb(65, 221, 125)";
-                        
-
-                    cell.style.color = "#000";
-                     cell.style.cursor = ""
-
-                    rosterDB.shifts.forEach( shift => cell.classList.remove(shift.shiftNo))
-                           
-              
-
-             
-            
+                cell.classList.remove(assignedShift.shiftNo);
             }
         }
     });
- 
-  
 }
 
  
@@ -1725,7 +1834,7 @@ function getSettingOpenAction(event) {
 
     const roster = getElem("main > section:first-child")
      getElem("#settings-option").style.display = "none"
-    const inputBox = getElem("#input-data")
+   
 
 
     switch(target.textContent) {
@@ -1747,8 +1856,9 @@ function getSettingOpenAction(event) {
       case "Save Settings":
         saveSettings()
         break
-      case "View Templates":
-          getElem("#shift-template-box").style.display = "block"
+      case "View Setting templates":
+          openSettingsTemplates()
+          
         break
       case "View Templates":
            alert("Not added yet")
@@ -1764,11 +1874,15 @@ function getSettingOpenAction(event) {
        
             getElem("#utility-icon").style.display = "block"
           target.textContent = "Show Input/Output"
+          sessionData.showInputOutput = false
+          sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
         break
       case "Show Input/Output":
           getElem("#utility-icon").style.display = "none"
           inputBox.style.display = "block"
           target.textContent = "Hide Input/Output"
+          sessionData.showInputOutput = true
+          sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
         break
       case "Delete Settings":
       deleteSavedDB()
@@ -1843,7 +1957,7 @@ function getSettingOpenAction(event) {
         break;
       case "Add Missing rows":
           addEmptyRowsAfterWeeks()
-          target.remove()
+         
         break;
        case "Manually Add Shifts":
 
@@ -2050,17 +2164,45 @@ function updateShiftSettingTb() {
 } 
 
 function saveSettings() {
-  if ( !rosterDB.shifts ) {
+  if (!rosterDB) {
     alert("There is nothing to save.")
     return
   }
 
+ const settID = database.settings.findIndex(setting => setting.settingID === rosterDB.settingID)
+
+  if ( settID === -1 ) {
+
+    database.settings.push(rosterDB);
+    database.index = database.settings.length - 1
+     localStorage.setItem("rosterDB", JSON.stringify(database))
+    alert(`Settings saved for "${rosterDB.settingName}"`)
+    
+  } else {
+
+    database.settings[settID] = rosterDB;
+    database.index = settID
+    
+    localStorage.setItem("rosterDB", JSON.stringify(database))
+
+    rosterDB = database.settings[settID]
+   alert(`Settings updated for "${rosterDB.settingName}"`)
+  }
+  
+
+
+ database.isNewSetting = false 
+ sessionData.currentSetting = rosterDB
+ sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
 
   restoreShiftSettingData()
-  DB.save()
-  alert("                Successfully saved!!!")
+  formulaResult.value = JSON.stringify(sessionData.currentSetting)
  
+
 }
+
+
+
 
  getElem("#delete-shift-settings").onclick = deleteSavedDB  
 
@@ -2069,6 +2211,14 @@ function saveSettings() {
     if (!rosterDB?.shifts) return
 
     const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+    shiftValue.value = Array.isArray(rosterDB.shifts)
+    ? rosterDB.shifts.map(({ shift }) => shift).join("\n"): "";
+
+     hours.value = Number(rosterDB.hours) || 9;
+     hourLabel.textContent =  hours.value 
+     employeeValue.value = Array.isArray(rosterDB.employees)
+     ? rosterDB.employees.map(({ employee }) => employee).join("\n"): "";
 
     for (const shift of rosterDB.shifts) {
 
@@ -2146,26 +2296,29 @@ function exportSettings() {
 
 
 function importDB() {
-
    
   const file = getElem("#new-file").files[0]
+  
   if(!file) {
     alert("There is nothing to import")
     return
   }
   const reader = new FileReader()
+  
 
   reader.readAsText(file)
   reader.onload = async () =>{
       const newRosterDB = await reader.result
       const db = JSON.parse(newRosterDB)
-      const validateFileDate = Object.keys(db).includes("shifts")
-      if (!validateFileDate) {
-       alert("You selected incorrect file")
-        return
-      }
-    rosterDB = db
-    updateDB()
+      rosterDB = db
+      if (!rosterDB.settingName) 
+        rosterDB.settingName = "Setting" + Date.now()
+
+      if (!rosterDB.settingID) 
+        rosterDB.settingID = Date.now()
+   
+         saveSettings()
+   
     
   }
   
@@ -2180,14 +2333,7 @@ function importDB() {
 function showUploaderBox() {
  getElem("#file-uploader").style.display = "block"
 }
-function updateDB() {
 
- restoreShiftSettingData()
- DB.save()
- location.reload()
-
-
-}
 
 getElem("#shift-settings").addEventListener("mousedown",moveSettingsBlock )
 function moveSettingsBlock(event) {
@@ -2648,8 +2794,6 @@ function getEmployeesTotalHrs() {
             let shiftCount = 0;
 
             [...table.rows[c].cells].forEach(cell => {
-              
-
 
                 const cellText = cell.textContent.trim();
 
@@ -2681,7 +2825,7 @@ function getEmployeesTotalHrs() {
     })
 
 
-    // Calculate employee huors
+    // Calculating employees total huors
     for (let t = 0; t < employees.length; t++) {
 
         const row = totalHoursTable.rows[t + 2];
@@ -2700,38 +2844,45 @@ function getEmployeesTotalHrs() {
     }
 
   //count weekends 
-  for(let e = 0; e <rosterDB.employees.length; e++) {
-    let satsCount = 0
-    let sunsCount = 0
+
+
+  const empLen = rosterDB.employees.length 
+  const shiftLen = rosterDB.shifts.length 
+
+
+
   
-    const tbRowIndex = e + 2 
-  tables.forEach((table, weekIndex) => {
-        
-        const satCell = table.rows[tbRowIndex].cells[7].textContent
-        const sunCell = table.rows[tbRowIndex].cells[8].textContent
+  for(let e = 3; e <=empLen+2; e++) {
 
-        satsCount += Number( weekendCount(satCell) ) 
-        sunsCount += Number( weekendCount(sunCell) )
+    const sats =  [...getElems(`.week-roster tr:nth-child(${e}) td:nth-child(8)`)]
+    .filter( sat => shifts.includes(sat.textContent))
+
+    const satPos = shiftLen + 3
+    const empSat = getElem(`#yellow-table tr:nth-child(${e}) td:nth-child(${satPos})`)
+    if ( !empSat ) return
+
+    empSat.textContent = sats.length
+
        
-        
-      })
-      const rowStart = e
-      const yellowTb = getElem("#yellow-table") 
-
-      const cellIndex = yellowTb.rows[2].cells.length 
-      yellowTb.rows[tbRowIndex].cells[cellIndex - 4 ].textContent = satsCount 
-      yellowTb.rows[tbRowIndex].cells[cellIndex - 3].textContent = sunsCount 
-
-
   }
-    function weekendCount(shiftValue) {
 
-      const shifts = rosterDB.shifts.map(({shift})=>shift)
+  for(let e = 3; e <=empLen+2; e++) {
 
-      return shifts.includes(shiftValue) ? 1 : 0 
+    const suns =  [...getElems(`.week-roster tr:nth-child(${e}) td:nth-child(9)`)]
+    .filter( sun => shifts.includes(sun.textContent))
+
+    const sunsPos = shiftLen + 4
+    const empSun = getElem(`#yellow-table tr:nth-child(${e}) td:nth-child(${sunsPos})`)
+    if ( !empSun ) return
+
+    empSun.textContent = suns.length
+
+       
+  }
 
 
- }
+
+
  
  const weekTables = getElems(".week-roster");
  const yellowTable = getElem("#yellow-table");
@@ -2742,10 +2893,11 @@ function getEmployeesTotalHrs() {
      const tb = document.createElement("table")
     tb.id="allowanceTb"
     tb.innerHTML += "<tr><th>Employees</th><th>Total HR</th><th>Allowance</th></tr>"
-    yellowTable.insertAdjacentHTML('afterend', tb.outerHTML)
+    getElem("#below-yellow-tb").insertAdjacentHTML('afterend', tb.outerHTML)
+
     const allowanceTb = getElem("#allowanceTb");
 
-
+ getElem("#allowanceTb").addEventListener("click", getAllowanceTbFormula)
 
 employees.forEach((emp, empIndex) => {
 
@@ -2891,7 +3043,7 @@ function resetShiftCount() {
 }
 
 
-updateUnallowedShifts() 
+
 function updateUnallowedShifts() {
 
   if (!rosterDB.shifts) return
@@ -3084,7 +3236,6 @@ function addShiftsManual() {
        target.style.background = shiftColor
        target.style.color = fontColor
      
-
         getEmployeesTotalHrs()
 
    }
@@ -3093,14 +3244,35 @@ function addShiftsManual() {
 }
 
 
-
-
-getElem("#view-templates").onclick =()=>{
-
-  getElem("#shift-template-box").style.display = "block"
+getElem("#view-templates").onclick = () => {
+      openSettingsTemplates() 
 }
 
-getElem("#shift-template-box").addEventListener("click", updateTemplates )
+
+
+function openSettingsTemplates() {
+   const templateList = getElem("#days-weeks-template")
+  templateList.length = 0 
+
+ 
+  for (let o = 0; o < database.settings.length; o++) {
+
+    const settingName = database.settings[o].settingName
+    const optionValue = settingName? settingName : `Setting ${ o + 1}`
+    const newOption = new Option( optionValue, optionValue)
+    templateList.options[o] = newOption
+
+  }
+ 
+
+
+  getElem("#shift-template-box").style.display = "block"
+
+
+
+}
+
+getElem("#shift-template-box").addEventListener("click", updateSettingTemplates )
 
 totalNumShiftsPerEmp.oninput = () => {
   if (totalNumShiftsPerEmp.value.length > 2) {
@@ -3120,20 +3292,28 @@ totalNumShiftsPerEmp.onchange =()=>{
 
 }
 
-function updateTemplates(event) {
+
+function updateSettingTemplates(event) {
   const target = event.target
 if (
   target.tagName !=="BUTTON"&&
   target.tagName !=="OPTION"&&
-  target.tagName !=="SPAN"
+  target.tagName !=="SPAN" 
 
 ) return 
 
   const templateInp = getElem("#template-name")
   const templateList = getElem("#days-weeks-template")
- // templateInp.value = target.tagName
+  const templateListLen = templateList.options.length
+  let newIndex = database.settings.length > 0 ? database.settings.length - 1 : 0
+
   switch(target.textContent) {
-    case "Add Present data as Template":
+    case "Add Present setting as Template":
+
+      if (templateListLen >= 20) {
+        alert("Maximum number of templates reached.")
+        return
+      }
 
       if (!/\w+/g.test(templateInp.value)) {
         alert("The template name must contain alphanumeric")
@@ -3144,9 +3324,6 @@ if (
         return  
       }
 
-      
-
-   
        if (templateInp.value.trim()==="") {
         alert("Template name is required")
         return
@@ -3159,28 +3336,44 @@ if (
           alert("The name already exist, please choose a different name.")
           return
        }
+
+       if (isTemplateAvailable(templateInp.value.toLowerCase().replace(/\s*/g,''))) {
+
+          alert("The name already exist, please a different name.")
+          return
+       }
  
-      const len = templateList.options.length 
-      const newTemp = new Option(templateInp.value,templateInp.value )
-      templateList.options[len] = newTemp
-    
+       
+       const len = templateList.options.length
+       const newSettTemp = new Option(templateInp.value,templateInp.value )
+       templateList.options[len] = newSettTemp
+       
+      rosterDB.settingName = templateInp.value
+      rosterDB.settingID = Date.now()
+      sessionData.currentSetting = rosterDB
+
+      database.settings.push(rosterDB)
+      database.index = database.settings.length - 1
+      sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
+      
+
       break
        case "Reset":
         templateInp.value =""
       break
        case "Rename Template":
 
-       const selectedID = templateList.selectedIndex
-
-
-
        if (templateList.options.length === 0 ) {
         alert("There is nothing to rename")
         return
        }
 
-       if ( selectedID === -1 ) {
-          alert("You did not selected template name to rename.")
+      const selectOptID = templateList.selectedIndex
+      const selectedOption = templateList.options[templateList.selectedIndex]
+      const selectedSettingIndex = database.settings.findIndex(setting=> setting.settingName === selectedOption.value)
+
+       if ( selectOptID === -1 ) {
+          alert("You did not select a setting template name to rename.")
           return
        }
    
@@ -3196,36 +3389,79 @@ if (
           alert("The name already exist, please a different name.")
           return
        }
-       templateList.options[selectedID].value = templateInp.value
-       templateList.options[selectedID].textContent = templateInp.value
+
+       templateList.options[selectOptID].value = templateInp.value
+       templateList.options[selectOptID].textContent = templateInp.value
+       database.settings[selectedSettingIndex].settingName = templateInp.value
+       database.index = selectedSettingIndex
+       rosterDB.settingName = templateInp.value
+      sessionData.currentSetting = rosterDB
+      sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
+       runAfterPassedValidation()
+
+      
    
       break
        case "Delete Template":
-        const selectedId = templateList.selectedIndex
-         templateList.options[selectedId].remove()
+          const curIndex = templateList.selectedIndex
+         const selectedSettIndex = database.settings.findIndex(setting=> setting.settingName === templateList.options[curIndex].value)
+         if (curIndex === -1) {
+          alert("You did not select a setting template name to delete.")
+          return
+         }
+         database.settings.splice(selectedSettIndex, 1)
+         templateList.options[curIndex].remove()
+
+        newIndex = database.settings.length > 0 ? database.settings.length - 1 : 0
+         rosterDB = database.settings[newIndex]
+         database.index = newIndex
+       
       break
-       case "Use Selected Template":
-      break
-       case "Export Template":
-      break
+  
        case "Save Settings":
-        saveData()
+        if (templateList.options.length === 0 ) {
+          alert("There is nothing to save")
+          return
+        }
+        
+         saveSettings()
       break
       
       case "Clear Templates":
         templateList.options.length = 0
       break
+    
       case "Generate Random Template":
         alert("Not added yet")
       break
+   
        case "X":
         getElem("#shift-template-box").style.display = "none"
       break
       default:
+
+    
         templateInp.value = target.textContent
+        const selectedSetIndex = database.settings.findIndex(setting=> setting.settingName === target.textContent)
+       
+        if (selectedSetIndex === -1) {
+          alert("The selected template is not found in the database.")
+          return
+        }
+        rosterDB = database.settings[selectedSetIndex]
+        database.index = selectedSetIndex
+        sessionData.currentSetting = rosterDB
+        sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
+       
+        runAfterPassedValidation()
+
+        
 
   }
 
+ 
+   
+          
   function isTemplateAvailable(tempName) {
 
       const options = [...templateList.options].map( opt => 
@@ -3236,7 +3472,7 @@ if (
 
 }
 
-updateAllowedShifts()
+
 function updateAllowedShifts() {
 
 if (!rosterDB.unAllowedShiftOrder) return
@@ -3317,6 +3553,8 @@ async function pasteFromClipboard() {
     }
 }
 
+
+
 getElem("#save-unallowed-order-shift").onclick = saveSettings
 getElem(".terms-c").onclick = () =>{
 
@@ -3328,10 +3566,15 @@ getElem("#random-shifts").addEventListener("click", rosterPeople)
 getElem("#load-shift").addEventListener("click", rosterPeople)
 getElem("#upload-new-btn").addEventListener("click", importDB)
 
-if(rosterDB.shifts) {
-  restoreShiftSettingData()
-  rosterPeople()
  
+if (rosterDB.shifts && rosterDB.employees) {
+
+    runAfterPassedValidation()
+   
+    
+      
+
+
+    
 
 }
- 
