@@ -124,7 +124,22 @@ chosenMonth.textContent = sessionData.currentMonth || curDate.toLocaleDateString
 delim.textContent = sessionData?.delimiter || ","
 
 
+getElem("#shift-values").placeholder = 
+`For eg
+06AM - 16PM
+12PM - 22PM
+20PM - 06AM
+LEAVE
+SICK
+FRL
+...
 
+`
+
+getElem("#employee-name").placeholder = 
+`Emplyee name 1\nEmployee name 2
+  ...
+`
 
 splitterBox.addEventListener("click", updateDelimiter)
 
@@ -2169,7 +2184,7 @@ function saveSettings() {
     return
   }
 
- const settID = database.settings.findIndex(setting => setting.settingID === rosterDB.settingID)
+ const settID = database?.settings.findIndex(setting => setting.settingID === rosterDB.settingID) 
 
   if ( settID === -1 ) {
 
