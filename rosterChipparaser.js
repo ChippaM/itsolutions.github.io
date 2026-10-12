@@ -425,7 +425,7 @@ const workers = empl.map( name => {
 rosterDB.employees = workers
 rosterDB.hours = hours.value 
 rosterDB.weekOneStartRowNo = 2  
-rosterDB.weekTwoStartRowNo = shiftList.length + 3  
+rosterDB.weekTwoStartRowNo = workers.length + 4
 rosterDB.settingName = 'Setting' + Date.now()
 rosterDB.settingID = Date.now()
 database.isNewSetting = true
@@ -1084,6 +1084,9 @@ function getYellowTableFormulas(event) {
 
     const fixedShift = ["sat","sun","no of shifts"]
     
+    const endTr = [...getElems(`.week-roster:nth-child(${rosterConfig.totWeeksShown}) tr`)].includes(row)
+
+
  
     if (!fixedShift.includes(shift)) {
          if (rowID === 0) {
