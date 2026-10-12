@@ -47,8 +47,8 @@ const totalNumShiftsPerEmp = getElem("#total-shifts-per-employee")
 const formulaResult = getElem("#result-formula")
 const rangeElems = getClassElem("range")
 const hourLabel = getElem("#hour-label")
-let weekOneStartRowNum = rangeElems[0]
-let weekTwoStartRowNum = rangeElems[(rangeElems.length%6)+1]
+ 
+ 
 const copyStatus = getElem("#copy-status")
 
 const leftShift = getElem("#leftShift")
@@ -105,6 +105,8 @@ try {
 }
 
 
+ 
+
 
 let yellowTable = null; 
 
@@ -126,7 +128,7 @@ delim.textContent = sessionData?.delimiter || ","
 
 
 getElem("#shift-values").placeholder = 
-`For eg
+`For example
 06AM - 16PM
 12PM - 22PM
 20PM - 06AM
@@ -422,8 +424,8 @@ const workers = empl.map( name => {
 
 rosterDB.employees = workers
 rosterDB.hours = hours.value 
-rosterDB.weekOneStartRowNo = 2 //Number(weekOneStartRowNum.value)
-rosterDB.weekTwoStartRowNo = shiftList.length + 3 //weekTwoStartRowNum.value
+rosterDB.weekOneStartRowNo = 2  
+rosterDB.weekTwoStartRowNo = shiftList.length + 3  
 rosterDB.settingName = 'Setting' + Date.now()
 rosterDB.settingID = Date.now()
 database.isNewSetting = true
@@ -485,7 +487,13 @@ function deleteSavedDB() {
     DB.delete()
 }
 
+document.body.addEventListener("keydown", autoAddEmptyRows);
 
+function autoAddEmptyRows(event) {
+  if (event.ctrlKey && event.key.toLowerCase() === "c") {
+    addEmptyRowsAfterWeeks();
+  }
+}
 
 
 function runAfterPassedValidation() {
@@ -529,7 +537,12 @@ function updateWeekOneRowNo() {
     const Wk1RowNumOne = getElem(".week-roster .row-number") 
     const Wk1RowNums = getElems(".week-roster:first-child .row-number")
 
-  const startNum = Number(Wk1RowNumOne.value)
+     const Wk2RowNumOne = getElem(".week-roster:nth-child(2) .row-number") 
+
+     const startNum = Number(Wk1RowNumOne.value)
+ 
+     Wk2RowNumOne.value = rosterDB?.weekTwoStartRowNo || Number(getElem(".week-roster tr:last-child .row-number").value)
+
   Wk1RowNums.forEach( (rowNum, i) => {
 
     if (i == 0 ) return
@@ -541,10 +554,8 @@ function updateWeekOneRowNo() {
 
   } )
 
-  rosterDB.weekOneStartRowNo = Wk1RowNumOne.value 
- const Wk2RowNumOne = getElem(".week-roster:nth-child(2) .row-number") 
+ // rosterDB.weekOneStartRowNo = rosterDB?.weekOneStartRowNo ?? Wk1RowNumOne.value 
 
- Wk2RowNumOne.value = Number(getElem(".week-roster tr:last-child .row-number").value)+3
   updateWeekSecondRowNo()
 
 
@@ -565,7 +576,7 @@ function updateWeekSecondRowNo() {
 
   const startNum = Number( Wk2RowNumOne.value) 
 
-  rosterDB.weekTwoStartRowNo = startNum
+  rosterDB.weekTwoStartRowNo = startNum 
   sessionData.currentSetting = rosterDB
 
   sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
@@ -726,31 +737,9 @@ function verifyMonth() {
 }
 
 
-function updateWeekOneStartRowNum() {
-  const rangeOne = getElem('.week-roster:nth-child(1) .row-number')
-  if(rangeOne.value >20 || rangeOne.value == 0) {
-      rangeOne.value = 2
-      return
-  }
+ 
 
-
-  rosterDB.weekOneStartRowNo = rangeOne.value
-  
-  updateNewEmpRow()
-  
-  
-}
-
-
-
-function updateWeekTwoStartRowNum() {
-  if (weekTwoStartRowNum.value > 2) {
-      weekTwoStartRowNum.value  = ( rosterDB.employees.length || 0 ) + 3
-  }
-  rosterDB.weekTwoStartRowNo = getElem('.week-roster:nth-child(2) .row-number').value
- alert()
-}
-
+ 
 
 function addWeekTables() {
 
@@ -810,7 +799,6 @@ const  emplpyeeRows= rosterDB.employees.map( obj => {
 week += emplpyeeRows + "</table>"
 
 getElem("#roster-tables").innerHTML= week.repeat(6)
-//getElem(".week-roster:nth-child(2) .row-number").value = rosterDB.employees.length + 4
 
 getElems(".week-roster tr td:last-child").forEach( hoursTD => hoursTD.addEventListener("click", getStandardShiftFormula ) )
     
@@ -1136,7 +1124,7 @@ function getYellowTableFormulas(event) {
   
 }
  
-
+let clearCopyInterval = null
 
 async function copyFormula() {
     const formula = formulaResult.value.trim();
@@ -1164,7 +1152,8 @@ async function copyFormula() {
 
 
     copyStatus.textContent = "Copied successfully!"
-    setTimeout(()=>copyStatus.textContent = '.', 1000)
+    clearInterval(clearCopyInterval)
+   clearCopyInterval = setTimeout(()=>copyStatus.textContent = '.', 1000)
 }
 
 
@@ -2189,6 +2178,7 @@ function saveSettings() {
 
   if ( settID === -1 ) {
 
+
     database.settings.push(rosterDB);
     database.index = database.settings.length - 1
      localStorage.setItem("rosterDB", JSON.stringify(database))
@@ -2212,7 +2202,7 @@ function saveSettings() {
  sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
 
   restoreShiftSettingData()
-  formulaResult.value = JSON.stringify(sessionData.currentSetting)
+
  
 
 }
