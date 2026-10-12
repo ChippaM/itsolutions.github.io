@@ -98,7 +98,8 @@ try {
   alert("Error message occurried while loading the data")
 
   rosterDB = {};
-///  localStorage.removeItem("rosterDB");
+  localStorage.removeItem("rosterDB");
+  location.reload()
 
 
 }
