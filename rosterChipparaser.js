@@ -497,7 +497,23 @@ document.body.addEventListener("keydown", autoAddEmptyRows);
 
 function autoAddEmptyRows(event) {
   if (event.ctrlKey && event.key.toLowerCase() === "c") {
-    addEmptyRowsAfterWeeks();
+     addEmptyRowsAfterWeeks()
+
+    getElem(".week-roster tr").style.display = "none"
+
+    getElems(".week-roster tr>*:first-child")
+    .forEach(td => td.style.display = "none")
+
+
+    setTimeout(()=> {
+         getElem(".week-roster tr").style.display = ""
+
+    getElems(".week-roster tr>*:first-child")
+    .forEach(td => td.style.display = "")
+
+
+    },1000)
+   
   }
 }
 
@@ -1971,10 +1987,7 @@ function getSettingOpenAction(event) {
        
         alert("1. Right click\n 2. Export your settings\n3. Delete your settings. Import your settings")
         break;
-      case "Add Missing rows":
-          addEmptyRowsAfterWeeks()
-         
-        break;
+
        case "Manually Add Shifts":
 
 
@@ -2372,6 +2385,14 @@ function shiftTemplatesValues(event) {
        shiftTemplate.options.length = 0
     break
     default:
+      if(
+        target.tagName === "BUTTON" ||
+        target.tagName === "P" ||
+        target.tagName === "H3" ||
+        target.tagName === "SPAN"
+        
+        
+      ) return
     
     shiftTemplateInp.value = target.textContent    
 
@@ -2380,6 +2401,22 @@ function shiftTemplatesValues(event) {
   }
 
 }
+
+function storeShiftTemplates() {
+
+   const shiftEmplate = {}
+   const tables = getElems(".week-roster")
+
+   tables.forEach( (tb, tbIndex) => {
+
+      
+
+
+
+   })
+}
+
+function restoreShiftTemplates() {}
 /////////////////////////////////////
 
 getElem("#shift-values-box").addEventListener("mousedown",moveShiftTempBox )
