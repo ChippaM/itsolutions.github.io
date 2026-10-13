@@ -22,7 +22,7 @@ let sessionData = {
 let rosterDB = {}
 const rosterConfig = {}
 const tempSession = {}
-const birthday = [{employee:"Chippa", date:"03-03"}]
+const birthday = [{employee:"Chippa Mathebula", date:"03-03"}]
 
 const DB = {
   save: () => saveSettings(),
@@ -30,6 +30,12 @@ const DB = {
   delete: () => {
     localStorage.removeItem("rosterDB") 
     sessionStorage.removeItem("rosterSession") 
+    rosterDB = {}
+    database = {
+  currentMonth: null,
+  delimiter: null,
+  showInputOutput: true,
+  currentSetting: null}
     location.reload()
   }
 }
@@ -531,7 +537,7 @@ function runAfterPassedValidation() {
   
     
 }
-
+renderNecessaryItems()
   
 function updateWeekOneRowNo() {
     const Wk1RowNumOne = getElem(".week-roster .row-number") 
@@ -1122,6 +1128,7 @@ function getYellowTableFormulas(event) {
  
 
   formulaResult.value = formula.replace("+","=")
+    .replace(/\+COUNTIF\(\,\".*\"\)/ig, "")
   copyFormula()
 
   
@@ -2327,7 +2334,7 @@ function importDB() {
         rosterDB.settingID = Date.now()
    
          saveSettings()
-   
+         location.reload()
     
   }
   
