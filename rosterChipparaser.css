@@ -97,8 +97,6 @@
      
     }
 
- 
-
 
     .week-roster .row-number {
       text-align: center;
@@ -121,7 +119,7 @@
   }
    .employee-name {
     background:  rgb(186, 223, 245);
-    color: var(--employee_font_color);
+    color: #0c0c0c;
     font-weight: 600;
     padding: 0 40px 0 5px;
     text-align: left !important;
@@ -374,7 +372,8 @@ button#reset-shifts {
   margin-top: 5px;
   margin-bottom: 5px;
 }
-  textarea {
+
+textarea {
       width: 100%;
       min-width: 10vw;
       max-width: 80vh;
@@ -386,7 +385,7 @@ button#reset-shifts {
       font-size: 16px;
       font-family: Arial, Helvetica, sans-serif;
     }
-    input {
+   input {
         border: none;
         
         
@@ -794,6 +793,7 @@ footer {
   font-weight: bolder;
   cursor: pointer;
   color: #f00;
+  user-select: none;
 
 }
  
@@ -1085,4 +1085,40 @@ div:has(#total-shifts-per-employee) {
   padding: 5px;
 }
 
+#shift-values-box {
+  position: absolute;
+  top: 10vh;
+  left: 10vw;
+ 
+  background: rgb(62, 101, 112);
+  color: #fff;
+  width: fit-content;
 
+  padding:10px;
+  font-size: 14px;
+  border-radius: 5px;
+ 
+  display: none;
+
+
+}
+.select-container {
+  display: inline-block;
+}
+
+.select-container select {
+  width: 10vw;
+  height: 20vh;
+  padding: 5px;
+  
+}
+
+.select-container:first-child {
+  vertical-align: top;
+}
+
+ 
+
+#shift_template_name {
+  width: 100%;;
+}
