@@ -535,6 +535,7 @@ function runAfterPassedValidation() {
  updateWeekSecondRowNo()
   renderNecessaryItems()
   
+  rosterPeople()
     
 }
 renderNecessaryItems()
@@ -1986,6 +1987,10 @@ function getSettingOpenAction(event) {
             target.textContent = "Stop Shifts Additions"
             getElem("#yellow-table th:nth-child(2)").click()
         break;
+
+        case "View shifts templates":
+            getElem("#shift-values-box").style.display = "block"
+        break;
         case "Stop Shifts Additions":
            getElems("#yellow-table th")
            .forEach(th => th.classList.remove("selectedYellowHeader"))
@@ -2349,6 +2354,74 @@ function importDB() {
 function showUploaderBox() {
  getElem("#file-uploader").style.display = "block"
 }
+
+getElem("#shift-values-box").addEventListener("click", shiftTemplatesValues)
+function shiftTemplatesValues(event) {
+    const target = event.target
+
+    const selectMonths = getElem("#template-month")
+    const shiftTemplate = getElem("#shift_template")
+    const shiftTemplateInp = getElem("#shift_template_name")
+
+  switch(target.textContent) {
+    case "Delete All":
+     selectMonths.options.length = 0
+     shiftTemplate.options.length = 0
+    break;
+    case "Clear" :
+       shiftTemplate.options.length = 0
+    break
+    default:
+    
+    shiftTemplateInp.value = target.textContent    
+
+
+
+  }
+
+}
+/////////////////////////////////////
+
+getElem("#shift-values-box").addEventListener("mousedown",moveShiftTempBox )
+function moveShiftTempBox(event) {
+const shiftTempBox = getElem("#shift-values-box");
+///formulaResult.value = event.target.tagName
+ if (event.target.tagName === "OPTION" ||
+  event.target.tagName === "BUTTON" ||
+  event.target.tagName === "SELECT" 
+
+) return
+ 
+ const startX = event.clientX + 200
+    const startY = event.clientY + 100
+
+    const rect = shiftTempBox.getBoundingClientRect();
+
+    const startLeft = rect.left;
+    const startTop = rect.top;
+
+    function moveSettingsBlock(event) {
+
+        const x = startLeft + (event.clientX - startX);
+        const y = startTop + (event.clientY - startY);
+
+        shiftTempBox.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function stopMove() {
+        document.removeEventListener("mousemove", moveSettingsBlock);
+        document.removeEventListener("mouseup", stopMove);
+    }
+
+    document.addEventListener("mousemove", moveSettingsBlock);
+    document.addEventListener("mouseup", stopMove);
+  
+
+}
+
+
+
+///////////////////////
 
 
 getElem("#shift-settings").addEventListener("mousedown",moveSettingsBlock )
@@ -3504,6 +3577,12 @@ const unallowedShiftOrder = getElem("#unallowed-order-shift")
 
 }
 
+getElem("#close-shift-template").onclick = () => {
+   getElem("#shift-values-box").style.display = "none"
+
+}
+
+//////////////////////////////////
 async function copy() {
    const selectedText = window.getSelection().toString();
 
