@@ -2023,7 +2023,7 @@ function getSettingOpenAction(event) {
         case "View Roster Drafts":
 
             if(!rosterDB.shiftTemplates) {
-              alert("There no draft saved")
+              alert("There is no draft saved!!!")
               return
             }
             const shiftDraftTemp = getElem("#shift_template")
