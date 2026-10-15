@@ -16,7 +16,9 @@ let sessionData = {
   currentMonth: null,
   delimiter: null,
   showInputOutput: true,
-  currentSetting: null}
+  currentSetting: null,
+  draftId : null
+}
 
 
 let rosterDB = {}
@@ -500,6 +502,9 @@ function autoAddEmptyRows(event) {
      addEmptyRowsAfterWeeks()
 
     getElem(".week-roster tr").style.display = "none"
+    getElem("#total-hours-tb tr").style.display = "none"
+    showFormulas()
+   // getElem("#yellow-table tr").style.display = "none"
 
     getElems(".week-roster tr>*:first-child")
     .forEach(td => td.style.display = "none")
@@ -510,9 +515,11 @@ function autoAddEmptyRows(event) {
 
     getElems(".week-roster tr>*:first-child")
     .forEach(td => td.style.display = "")
+    getElem("#total-hours-tb tr").style.display = ""
+  //   getElem("#yellow-table tr").style.display = ""
+ getEmployeesTotalHrs()
 
-
-    },1000)
+    },0)
    
   }
 }
@@ -552,6 +559,10 @@ function runAfterPassedValidation() {
   renderNecessaryItems()
   
   rosterPeople()
+
+
+
+ 
     
 }
 renderNecessaryItems()
@@ -1363,7 +1374,7 @@ function rosterPeople() {
     }
 
   
-
+ clearShiftsBlocks()
     getElem("#allowanceTb")?.remove();
 
     const tables = [...getElems(".week-roster")];
@@ -1381,7 +1392,7 @@ function rosterPeople() {
         return;
     }
 
-    clearShiftsBlocks();
+   
 
 
     function shuffle(array) {
@@ -2001,9 +2012,31 @@ function getSettingOpenAction(event) {
             getElem("#yellow-table th:nth-child(2)").click()
         break;
 
-        case "View shifts templates":
+        case "Add Shift Template":
+            storeShiftTemplates(true, 0)
+        break
+        
+        case "Update Shift Template":
+            storeShiftTemplates(false)
+
+        break
+        case "View Roster Drafts":
+
+            if(!rosterDB.shiftTemplates) {
+              alert("There no draft saved")
+              return
+            }
+            const shiftDraftTemp = getElem("#shift_template")
+            for(let s = 0; s <rosterDB.shiftTemplates.length; s++) {
+                const optionName = rosterDB.shiftTemplates[s].templateName
+                const newItem = new Option( optionName, optionName)
+
+                shiftDraftTemp.options[s] = newItem
+
+            }
             getElem("#shift-values-box").style.display = "block"
         break;
+     
         case "Stop Shifts Additions":
            getElems("#yellow-table th")
            .forEach(th => th.classList.remove("selectedYellowHeader"))
@@ -2394,6 +2427,10 @@ function shiftTemplatesValues(event) {
         
       ) return
     
+      const id = shiftTemplate.options.selectedIndex || 0
+    
+      restoreShiftTemplates(id)
+
     shiftTemplateInp.value = target.textContent    
 
 
@@ -2402,21 +2439,195 @@ function shiftTemplatesValues(event) {
 
 }
 
-function storeShiftTemplates() {
-
-   const shiftEmplate = {}
-   const tables = getElems(".week-roster")
-
-   tables.forEach( (tb, tbIndex) => {
-
-      
 
 
+function storeShiftTemplates(isNewTemplate) {
+    const tables = getElems(".week-roster");
 
-   })
+    const templates = [];
+
+    tables.forEach(tb => {
+        [...tb.rows].forEach((row, rowID) => {
+            if (rowID < 2) return;
+
+            [...row.cells].forEach((cell, cellID) => {
+                if (cellID < 2 || cellID === 9) return;
+
+                templates.push(cell.textContent.trim());
+            });
+        });
+    });
+
+    if (isNewTemplate) {
+        
+        const now = Date.now();
+        const shiftTemplate = {
+            month: chosenMonth.textContent,
+            templateId: now,
+            templateName: `Draft_${chosenMonth.textContent}_${now}`,
+            template: templates
+        }
+
+        sessionData.draftId = shiftTemplate.templateId
+        sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
+      // alert(JSON.stringify(rosterDB.shiftTemplates))
+   
+
+      if (!rosterDB.shiftTemplates) {
+           rosterDB.shiftTemplates = []
+           
+      } 
+       rosterDB.shiftTemplates.push(shiftTemplate)
+       rosterDB.shiftTemplates.sort((a, b)=>b.templateId - a.templateId)
+       
+        alert("Added and ready to be saved!")
+        return;
+    }
+
+    
+    const tempIndex = rosterDB.shiftTemplates.findIndex(
+        temp => temp.templateId === sessionData.draftId
+    )
+
+     
+ 
+    if (tempIndex === -1) {
+        alert("Template not found. Update cancelled.");
+        return;
+    }
+
+ 
+    const existingTemplate = rosterDB.shiftTemplates[sessionData.draftId];
+
+
+  
+
+    if (existingTemplate.month !== chosenMonth.textContent) {
+        alert("The selected template belongs to another month.");
+        return;
+    }
+
+    existingTemplate.template = templates;
+
+    alert("Updated and ready to be saved!");
+    
 }
 
-function restoreShiftTemplates() {}
+
+function restoreShiftTemplates(pos) {
+    const shiftTemplates = rosterDB.shiftTemplates;
+
+    if (!Array.isArray(shiftTemplates) ||
+        !shiftTemplates[pos]) {
+        alert("Template not found.");
+        return;
+    }
+
+    const selectedTemplate = shiftTemplates[pos];
+
+    if (
+        chosenMonth.textContent.trim() !== selectedTemplate.month
+    ) {
+        alert(`This roster draft belongs to ${selectedTemplate.month} month.`);
+        return;
+    }
+
+
+    clearShiftsBlocks();
+
+    let c = 0;
+
+    const tables = getElems(".week-roster");
+
+    tables.forEach(tb => {
+        [...tb.rows].forEach((row, rowID) => {
+            if (rowID < 2) return;
+
+            [...row.cells].forEach((cell, cellID) => {
+                if (cellID < 2 || cellID === 9) return;
+
+                const shiftValue = selectedTemplate.template[c];
+
+            
+                if (shiftValue === undefined) {
+                    c++
+                    return
+                }
+
+        
+                rosterDB.shifts.forEach(shift => {
+                    cell.classList.remove(String(shift.shiftNo));
+                });
+
+           
+                const shiftDefinition = rosterDB.shifts.find(
+                    shift =>
+                        String(shift.shift).trim().toLowerCase() ===
+                        String(shiftValue).trim().toLowerCase()
+                );
+
+                if (shiftDefinition) {
+                    cell.classList.add(String(shiftDefinition.shiftNo));
+                }
+
+                cell.textContent = shiftValue;
+                c++
+            })
+        })
+    })
+
+    restoreShiftSettingData()
+    getEmployeesTotalHrs()
+}
+
+
+function showFormulas() {
+   getElems(".week-roster .row-number").forEach( (rowNo, rowID)=>{
+       const tdNum =  rowNo.value
+       const target = rowNo.parentElement.parentElement.children[9]
+      let tableIndex = null       
+        getElems(".week-roster").forEach( (table, tbIndex) => {
+
+          if ([...table.rows].includes(rowNo.parentElement.parentElement)) {
+            tableIndex = tbIndex
+          }
+        })
+           let cellPos = ``
+  const tdCols = getElems(".week-roster:first-child tr:first-child th")
+  if ( tableIndex == 0 ) {
+
+    cellPos = `${tdCols[rosterConfig.startCellNum+1].textContent}${tdNum}:H${tdNum}`
+
+  } else if (tableIndex >0 && tableIndex < rosterConfig.totWeeksShown-1 ) {
+       cellPos = `B${tdNum}:H${tdNum}`
+
+  } else {
+    cellPos = `B${tdNum}:${tdCols[rosterConfig.lastCellNum+1].textContent}${tdNum}`
+
+  }
+
+    const shifts = rosterDB.shifts.map(({shift}) => shift)
+  const cellNum = cellPos
+  const hr = hours.value 
+
+  shiftValue.value = shifts.join("\n")
+  let formula = '';
+   for(let shift of shifts)
+      formula+=`+countif(${cellNum}${delim.textContent}"${shift}")`
+
+ 
+
+
+    target.textContent = `=(${formula.replace('+','')})*${hr}`
+  })
+
+
+  //////////////////////////
+
+
+
+
+}
 /////////////////////////////////////
 
 getElem("#shift-values-box").addEventListener("mousedown",moveShiftTempBox )
@@ -3703,8 +3914,7 @@ if (rosterDB.shifts && rosterDB.employees) {
 
     runAfterPassedValidation()
    
-    
-      
+ 
 
 
     
