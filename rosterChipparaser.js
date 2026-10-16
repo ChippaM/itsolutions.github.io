@@ -504,7 +504,7 @@ function autoAddEmptyRows(event) {
     getElem(".week-roster tr").style.display = "none"
     getElem("#total-hours-tb tr").style.display = "none"
     showFormulas()
-   // getElem("#yellow-table tr").style.display = "none"
+    getElem("#yellow-table tr").style.display = "none"
 
     getElems(".week-roster tr>*:first-child")
     .forEach(td => td.style.display = "none")
@@ -516,7 +516,7 @@ function autoAddEmptyRows(event) {
     getElems(".week-roster tr>*:first-child")
     .forEach(td => td.style.display = "")
     getElem("#total-hours-tb tr").style.display = ""
-  //   getElem("#yellow-table tr").style.display = ""
+    getElem("#yellow-table tr").style.display = ""
  getEmployeesTotalHrs()
 
     },0)
@@ -1158,6 +1158,95 @@ function getYellowTableFormulas(event) {
   formulaResult.value = formula.replace("+","=")
     .replace(/\+COUNTIF\(\,\".*\"\)/ig, "")
   copyFormula()
+
+  
+}
+
+
+
+// I will rewrite the this function later
+
+function showYellowTableFormula(cell) {
+  const target = cell
+
+    if (target.tagName !== "TD" || 
+    target.cellIndex === 0 
+   
+  
+  ) return 
+
+   const tdCols = getElems(".week-roster:first-child tr:first-child th")
+   const shiftValues = getElems("#yellow-table tr:nth-child(2) th")
+   const cellPos = target.cellIndex
+   const rowPos = target.parentElement.rowIndex
+   const shift = shiftValues[cellPos].textContent.toLowerCase()
+   
+   copyStatus.textContent = rowPos
+
+   let formula = ""
+
+  
+      
+    const headerChar = getElems(`.week-roster tr:nth-child(${rowPos+1})`)
+    const rows = getElems(`.week-roster tr:nth-child(${rowPos+1})`)
+
+
+    if (shift === "no of shifts") {
+ 
+      return
+    }
+   rows.forEach( (row, rowID)=> {
+     const weekNum = [...getElems(".week-roster")].findIndex( wk =>wk.contains(row))
+     const cells = [...row.cells]
+    
+    const rowNum = row.cells[0].children[0].value
+    
+    const wk1CellChar = tdCols[rosterConfig.startCellNum + 1].textContent
+    const lastWkCellChar = tdCols[rosterConfig.lastCellNum + 1].textContent
+    let cellNum = ''
+
+    const fixedShift = ["sat","sun","no of shifts"]
+    
+    const endTr = [...getElems(`.week-roster:nth-child(${rosterConfig.totWeeksShown}) tr`)].includes(row)
+
+
+ 
+    if (!fixedShift.includes(shift)) {
+         if (rowID === 0) {
+            cellNum = `${wk1CellChar}${rowNum}:H${rowNum}`     
+
+          } else if (rowID > 0 & rowID <rosterConfig.totWeeksShown- 1) {
+
+            cellNum = `B${rowNum}:H${rowNum}`     
+          
+          }else if (rowID === rosterConfig.totWeeksShown - 1)  {
+               cellNum = `B${rowNum}:${lastWkCellChar}${rowNum}` 
+          
+          }
+
+          formula += `+COUNTIF(${cellNum}${delim.textContent}"${shift}")` 
+    }
+
+    if (shift === "sat") 
+      formula += `+countifs(G${rowNum}${delim.textContent} "<>off"${delim.textContent} G${rowNum}${delim.textContent} "<>")` 
+
+    if (shift === "sun") 
+      formula += `+countifs(H${rowNum}${delim.textContent} "<>off"${delim.textContent} H${rowNum}${delim.textContent} "<>")` 
+
+     if (shift === "no of shifts") 
+      formula += `Please add this manually for now, I sort out later |` 
+
+
+    
+
+
+   })
+ 
+ 
+
+ cell.textContent = formula.replace("+","=")
+    .replace(/\+COUNTIF\(\,\".*\"\)/ig, "")
+ 
 
   
 }
@@ -2012,18 +2101,15 @@ function getSettingOpenAction(event) {
             getElem("#yellow-table th:nth-child(2)").click()
         break;
 
-        case "Add Shift Template":
-            storeShiftTemplates(true, 0)
+        case "Save Draft CheckPoint":
+            storeShiftTemplates()
         break
         
-        case "Update Shift Template":
-            storeShiftTemplates(false)
-
-        break
+    
         case "View Roster Drafts":
 
             if(!rosterDB.shiftTemplates) {
-              alert("There is no draft saved!!!")
+              alert("There no draft saved")
               return
             }
             const shiftDraftTemp = getElem("#shift_template")
@@ -2441,7 +2527,7 @@ function shiftTemplatesValues(event) {
 
 
 
-function storeShiftTemplates(isNewTemplate) {
+function storeShiftTemplates() {
     const tables = getElems(".week-roster");
 
     const templates = [];
@@ -2458,7 +2544,6 @@ function storeShiftTemplates(isNewTemplate) {
         });
     });
 
-    if (isNewTemplate) {
         
         const now = Date.now();
         const shiftTemplate = {
@@ -2480,36 +2565,7 @@ function storeShiftTemplates(isNewTemplate) {
        rosterDB.shiftTemplates.push(shiftTemplate)
        rosterDB.shiftTemplates.sort((a, b)=>b.templateId - a.templateId)
        
-        alert("Added and ready to be saved!")
-        return;
-    }
-
-    
-    const tempIndex = rosterDB.shiftTemplates.findIndex(
-        temp => temp.templateId === sessionData.draftId
-    )
-
-     
- 
-    if (tempIndex === -1) {
-        alert("Template not found. Update cancelled.");
-        return;
-    }
-
- 
-    const existingTemplate = rosterDB.shiftTemplates[sessionData.draftId];
-
-
-  
-
-    if (existingTemplate.month !== chosenMonth.textContent) {
-        alert("The selected template belongs to another month.");
-        return;
-    }
-
-    existingTemplate.template = templates;
-
-    alert("Updated and ready to be saved!");
+       saveSettings()
     
 }
 
@@ -2592,7 +2648,9 @@ function showFormulas() {
             tableIndex = tbIndex
           }
         })
-           let cellPos = ``
+
+
+  let cellPos = ``
   const tdCols = getElems(".week-roster:first-child tr:first-child th")
   if ( tableIndex == 0 ) {
 
@@ -2606,7 +2664,7 @@ function showFormulas() {
 
   }
 
-    const shifts = rosterDB.shifts.map(({shift}) => shift)
+  const shifts = rosterDB.shifts.map(({shift}) => shift)
   const cellNum = cellPos
   const hr = hours.value 
 
@@ -2623,7 +2681,41 @@ function showFormulas() {
 
 
   //////////////////////////
+ 
+  getElems(".week-roster").forEach((table, tableIndex) => {
 
+    const rows = [...table.rows]
+
+ 
+
+    rows.forEach( (row, rowPos) => {
+       if (rowPos < 2) return
+        const cellFormula = row.cells[0].children[0].value
+
+        const totWkHr = getElems(`#total-hours-tb tr`)
+        totWkHr[rowPos].cells[tableIndex+1].textContent = '=I'+cellFormula
+
+   
+
+        
+    })
+    
+    
+  })
+  getElems(`#total-hours-tb tr`).forEach( (row, rowId )=>{
+
+    if (rowId < 2) return
+    const cellValue = row.cells[7]
+    
+    cellValue.textContent ="="+(row.textContent.match(/I\d+/g)||[]).join("+")
+
+  })
+
+/*//////////
+getElems("#yellow-table tr td")
+.forEach(cell=>showYellowTableFormula(cell))
+
+*/
 
 
 
@@ -3915,7 +4007,7 @@ if (rosterDB.shifts && rosterDB.employees) {
     runAfterPassedValidation()
    
  
-
+ 
 
     
 
