@@ -92,6 +92,22 @@
         <legend>Results (Formula)</legend>
         <textarea id="result-formula"></textarea>
       </fieldset>
+
+
+      <div id="updates">
+        <H4>* New features *</H4>
+        <p>- Feature to allow tables to be copied with their formulas.</p>
+        <p>- Feature to set how many shifts are required on a particular day.</p>
+        <p>- Feature to manage different rosters for multiple teams with different/same shifts.</p>
+        <p>- Feature to save multiple roster drafts and use them any time, month or year.</p>
+        <p>- Feature to export settings so that a colleague can continue where you stopped.</p>
+        <p>- Feature to add/remove unallowed shift order</p>
+        <p>- Feature to add/remove employee/s to never work a particular day/s and shift/s.</p>
+        <p>- Feature to allow you to change any shift color or font.</p>
+        <p>- Feature to print out roster or save as pdf for future referrence.</p>
+        <p>- Everything is private and no data is sent to 3rd parties.</p>
+      
+      </div>
          
       
 
@@ -212,7 +228,7 @@
            <button type="reset" type="button">Reset</button>
            <button id="delete-shift-settings" type="button">Delete</button>
     
-           </form>
+        </form>
           
   </section>
 
@@ -316,7 +332,7 @@
 
   <section id="utility-icon">
  
-    <div id="selected-month"><span>Sep 29</span></div>
+    <div id="balance-shifts" onclick="rosterPeople();alert('I am still testing this function and deciding which of your rules you set in settings to break or leave for this to work.')"><p>Give</p><span></span> <p>Shifts</p></div>
     <div id="pre-month"><span>Pres Month</span></div>
     <div id="random-shifts"><span>Get Random shifts</span></div>
     <div id="next-month"><span>Next Month</span></div>
@@ -373,7 +389,7 @@
         <h3>Select a month</h3>
         <select id="template-month" multiple></select>
         <br>
-        <button>Delete All</button>
+        <button disabled>Delete All</button>
       </div>
 
       <div class="select-container">
@@ -388,10 +404,10 @@
         <input type="text" id="shift_template_name" placeholder="No selected template" maxlength="20"><br>
       
     
-          <button>Rename</button>
-          <button>Delete</button>
-          <button>Save</button>
-          <button>Clear</button>
+          <button disabled>Rename</button>
+          <button disabled>Delete</button>
+          <button disabled>Save</button>
+          <button disabled>Clear</button>
          </div>
    
     </section>  
