@@ -1465,10 +1465,387 @@ if (getElem("#settings-option").style.display === "none") return
 
 
 }
- 
 
 
 function rosterPeople() {
+
+
+  
+    if (!rosterDB?.shifts?.length || !rosterDB?.employees?.length) {
+        alert("Please load employees and shifts first.");
+        return;
+    }
+
+  
+ clearShiftsBlocks()
+    getElem("#allowanceTb")?.remove();
+
+    const tables = [...getElems(".week-roster")];
+
+    if (!tables.length) {
+        return;
+    }
+
+    const nonFixedShifts = rosterDB.shifts.filter(
+        shift => shift.isNonFixedShift === true
+    )
+
+    if (!nonFixedShifts.length) {
+       
+        return;
+    }
+
+   
+
+
+    function shuffle(array) {
+
+        const result = [...array];
+
+        for (let i = result.length - 1; i > 0; i--) {
+
+            const j = Math.floor(
+                Math.random() * (i + 1)
+            );
+
+            [result[i], result[j]] =
+                [result[j], result[i]];
+        }
+
+        return result;
+    }
+
+
+ 
+ 
+
+    function getAllowedShifts(employee, weekIndex, dayIndex) {
+
+         
+
+        if (!Array.isArray(employee.workdays)) {
+            return nonFixedShifts;
+        }
+
+        const weekKey = `week${weekIndex}`;
+
+        const weekObj = employee.workdays.find(
+            obj => Array.isArray(obj?.[weekKey])
+        );
+
+        if (!weekObj) {
+            return nonFixedShifts;
+        }
+
+        const allowedShiftNos =
+            weekObj[weekKey]?.[dayIndex];
+
+        if (!Array.isArray(allowedShiftNos)) {
+            return nonFixedShifts;
+        }
+
+        return nonFixedShifts.filter(
+            shift => allowedShiftNos.includes(shift.shiftNo)
+        );
+    }
+
+ 
+    
+
+    function getMaximum(shift, dayIndex, weekIndex) {
+
+        const value = shift.shiftRepeats?.[dayIndex]?.[weekIndex];
+
+        const maximum = Number(value);
+
+        return Number.isFinite(maximum) && maximum > 0
+            ? maximum : 0;
+    }
+
+
+ 
+ 
+
+    function getShiftFromCell(cell) {
+
+        if (!cell) {
+            return null
+        }
+
+        return rosterDB.shifts.find(
+            shift => cell.classList.contains(shift.shiftNo)
+        ) || null
+    }
+
+
+ 
+
+    function getPreviousShift(employeeIndex, weekIndex, dayIndex) {
+
+        let previousTable
+        let previousDayIndex
+
+
+        if (dayIndex > 0) {
+
+            previousTable = tables[weekIndex]
+            previousDayIndex = dayIndex - 1
+
+        }
+
+  
+
+        else if (weekIndex > 0) {
+
+            previousTable = tables[weekIndex - 1]
+            previousDayIndex = 6;
+
+        }
+
+
+        else {
+
+            return null
+        }
+
+
+        const rowIndex = employeeIndex + 2
+
+        const row = previousTable?.rows[rowIndex]
+
+        if (!row) {
+            return null
+        }
+
+        const cellIndex = previousDayIndex + 2
+
+        const cell = row.cells[cellIndex]
+
+        if (!cell) {
+            return null
+        }
+
+        return getShiftFromCell(cell);
+    }
+
+ 
+    function isShiftOrderAllowed(previousShift, newShift) {
+
+        if (!previousShift || !newShift) {
+            return true;
+        }
+
+        const unallowed =
+            rosterDB?.unAllowedShiftOrder || [];
+
+        if (!Array.isArray(unallowed) || !unallowed.length) {
+            return true;
+        }
+
+        const order =
+            `${previousShift.shift} > ${newShift.shift}`;
+
+        return !unallowed.includes(order);
+    }
+
+
+ 
+ 
+
+    function assignShift(cell, shift) {
+
+        for (const { shiftNo } of rosterDB.shifts) {
+            cell.classList.remove(shiftNo);
+        }
+
+        cell.classList.add(shift.shiftNo);
+
+        cell.textContent = shift.shift;
+
+        cell.style.background =
+            shift.shiftColor || "";
+
+        cell.style.color =
+            shift.fontColor || "#000";
+    }
+
+
+
+    tables.forEach((table, weekIndex) => {
+
+        
+      
+
+        for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+
+    
+
+            if (
+                weekIndex === 0 &&
+                dayIndex < Number(rosterConfig.startCellNum) - 1
+            ) {
+                continue;
+            }
+
+
+            if (
+                weekIndex === rosterConfig.totWeeksShown - 1 &&
+                dayIndex > Number(rosterConfig.lastCellNum) - 1
+            ) {
+                continue;
+            }
+
+
+            const cellIndex = dayIndex + 2
+       
+
+            const randomEmployees = shuffle(rosterDB.employees)
+       
+
+            const remaining = new Map();
+
+            for (const shift of nonFixedShifts) {
+
+                remaining.set(
+                    shift.shiftNo,
+                    getMaximum(
+                        shift,
+                        dayIndex,
+                        weekIndex
+                    )
+                )
+            }
+
+
+            for (const employee of randomEmployees) {
+
+                const employeeIndex =
+                    rosterDB.employees.indexOf(employee);
+
+                if (employeeIndex === -1) {
+                    continue
+                }
+
+
+                const rowIndex =
+                    employeeIndex + 2;
+
+                const row =
+                    table.rows[rowIndex]
+
+                if (!row) {
+                    continue
+                }
+
+
+                const cell =
+                    row.cells[cellIndex];
+
+                if (!cell) {
+                    continue
+                }
+
+
+
+                const hasFixedShift =
+                    rosterDB.shifts.some(shift =>
+                        shift.isNonFixedShift !== true &&
+                        cell.classList.contains(shift.shiftNo)
+                    );
+
+                if (hasFixedShift) {
+                    continue
+                }
+
+
+       
+
+                if (cell.textContent.trim() !== "OFF") {
+                    continue
+                }
+
+
+                const allowed =
+                    getAllowedShifts(
+                        employee,
+                        weekIndex,
+                        dayIndex
+                    )
+
+                const previousShift =
+                    getPreviousShift(
+                        employeeIndex,
+                        weekIndex,
+                        dayIndex
+                    )
+
+
+         
+          
+             
+                let available =
+                    allowed.filter(shift =>
+                        (remaining.get(shift.shiftNo) ?? 0) > 0
+                    )
+
+
+
+                available =
+                    available.filter(newShift =>
+                        isShiftOrderAllowed(
+                            previousShift,
+                            newShift
+                        )
+                    )
+
+
+                if (!available.length) {
+                    continue;
+                }
+
+
+           
+            
+          
+
+                const selectedShift =
+                    available[
+                        Math.floor(
+                            Math.random() *
+                            available.length
+                        )
+                    ]
+
+ 
+         
+           
+
+                assignShift(
+                    cell,
+                    selectedShift
+                )
+
+ 
+           
+            
+
+                remaining.set(
+                    selectedShift.shiftNo,
+                    remaining.get(selectedShift.shiftNo) - 1
+                )
+
+            }
+
+        }
+
+    })
+
+
+   getEmployeesTotalHrs()
+}
+
+
+function rosterPeopleForTotalDays() {
     if (!rosterDB?.shifts?.length || !rosterDB?.employees?.length) {
         alert("Please load employees and shifts first.");
         return;
@@ -1992,7 +2369,7 @@ function getSettingOpenAction(event) {
         case "View Roster Drafts":
 
             if(!rosterDB.shiftTemplates) {
-              alert("There no draft saved")
+              alert("There are no saved draft.")
               return
             }
             const shiftDraftTemp = getElem("#shift_template")
