@@ -172,9 +172,8 @@ function updateRosterDays() {
   const dayCells = getElems(".day-cell")
   let date = new Date(chosenMonth.textContent)
 
-  getElem("#selected-month").innerHTML = chosenMonth.textContent.split(" ").join("<br>")
-  .replace(/(?<=[a-z]{3})[a-z]/ig,'')
 
+ getElem("#balance-shifts span").innerHTML =  totalNumShiftsPerEmp.value ?? 20 
 
   let firstPos  = date.getDay() > 0 ? date.getDay()-1 : 6 
  
@@ -377,6 +376,13 @@ function cleanShifts() {
     
       return false
     }
+
+  if (shift.toLowerCase() === "off") {
+
+      alert(shift +" is not a shift, please remove it.")
+      return
+  }
+    
  }
 
  const shifts = []
@@ -517,7 +523,7 @@ function autoAddEmptyRows(event) {
     .forEach(td => td.style.display = "")
     getElem("#total-hours-tb tr").style.display = ""
     getElem("#yellow-table tr").style.display = ""
- getEmployeesTotalHrs()
+     getEmployeesTotalHrs()
 
     },0)
    
@@ -1101,11 +1107,6 @@ function getYellowTableFormulas(event) {
     const rows = getElems(`.week-roster tr:nth-child(${rowPos+1})`)
 
 
-    if (shift === "no of shifts") {
-
-      alert(`Please add this one manually for now, use =sum(), I will automate this one later ` )
-      return
-    }
    rows.forEach( (row, rowID)=> {
      const weekNum = [...getElems(".week-roster")].findIndex( wk =>wk.contains(row))
      const cells = [...row.cells]
@@ -1116,7 +1117,7 @@ function getYellowTableFormulas(event) {
     const lastWkCellChar = tdCols[rosterConfig.lastCellNum + 1].textContent
     let cellNum = ''
 
-    const fixedShift = ["sat","sun","no of shifts"]
+    const fixedShift = ["sat","sun"]
     
     const endTr = [...getElems(`.week-roster:nth-child(${rosterConfig.totWeeksShown}) tr`)].includes(row)
 
@@ -1144,8 +1145,15 @@ function getYellowTableFormulas(event) {
     if (shift === "sun") 
       formula += `+countifs(H${rowNum}${delim.textContent} "<>off"${delim.textContent} H${rowNum}${delim.textContent} "<>")` 
 
-     if (shift === "no of shifts") 
-      formula += `Please add this manually for now, I sort out later |` 
+     if (shift === "no of shifts") {
+
+         for(let shift of rosterDB.shifts.map(({shift})=> shift)) {
+
+             formula += `+COUNTIF(${cellNum}${delim.textContent}"${shift}")`
+            
+         }
+     }
+      
 
 
     
@@ -1254,6 +1262,11 @@ function showYellowTableFormula(cell) {
 let clearCopyInterval = null
 
 async function copyFormula() {
+   
+  if (!formulaResult.value.trim()) {
+
+    return
+  }
     const formula = formulaResult.value.trim();
 
     if (!formula) {
@@ -1453,62 +1466,55 @@ if (getElem("#settings-option").style.display === "none") return
 
 }
  
+
+
 function rosterPeople() {
-
-
-  
     if (!rosterDB?.shifts?.length || !rosterDB?.employees?.length) {
         alert("Please load employees and shifts first.");
         return;
     }
 
-  
- clearShiftsBlocks()
+    const maxShiftsPerEmployee = Number(totalNumShiftsPerEmp.value);
+
+    if (
+        totalNumShiftsPerEmp.value.trim() === "" ||
+        !Number.isInteger(maxShiftsPerEmployee) ||
+        maxShiftsPerEmployee < 0
+    ) {
+        alert("Please enter a valid maximum number of shifts per employee.");
+        return;
+    }
+
+    clearShiftsBlocks();
     getElem("#allowanceTb")?.remove();
 
     const tables = [...getElems(".week-roster")];
 
-    if (!tables.length) {
-        return;
-    }
+    if (!tables.length) return;
 
     const nonFixedShifts = rosterDB.shifts.filter(
         shift => shift.isNonFixedShift === true
-    )
+    );
 
-    if (!nonFixedShifts.length) {
-       
-        return;
-    }
+    if (!nonFixedShifts.length) return;
 
-   
 
+    const employeeShiftCounts = new Map(
+        rosterDB.employees.map((employee, index) => [index, 0])
+    );
 
     function shuffle(array) {
-
         const result = [...array];
 
         for (let i = result.length - 1; i > 0; i--) {
-
-            const j = Math.floor(
-                Math.random() * (i + 1)
-            );
-
-            [result[i], result[j]] =
-                [result[j], result[i]];
+            const j = Math.floor(Math.random() * (i + 1));
+            [result[i], result[j]] = [result[j], result[i]];
         }
 
         return result;
     }
 
-
- 
- 
-
     function getAllowedShifts(employee, weekIndex, dayIndex) {
-
-         
-
         if (!Array.isArray(employee.workdays)) {
             return nonFixedShifts;
         }
@@ -1519,12 +1525,9 @@ function rosterPeople() {
             obj => Array.isArray(obj?.[weekKey])
         );
 
-        if (!weekObj) {
-            return nonFixedShifts;
-        }
+        if (!weekObj) return nonFixedShifts;
 
-        const allowedShiftNos =
-            weekObj[weekKey]?.[dayIndex];
+        const allowedShiftNos = weekObj[weekKey]?.[dayIndex];
 
         if (!Array.isArray(allowedShiftNos)) {
             return nonFixedShifts;
@@ -1535,136 +1538,77 @@ function rosterPeople() {
         );
     }
 
- 
-    
-
     function getMaximum(shift, dayIndex, weekIndex) {
-
         const value = shift.shiftRepeats?.[dayIndex]?.[weekIndex];
-
         const maximum = Number(value);
 
         return Number.isFinite(maximum) && maximum > 0
-            ? maximum : 0;
+            ? maximum
+            : 0;
     }
 
-
- 
- 
-
     function getShiftFromCell(cell) {
-
-        if (!cell) {
-            return null;
-        }
+        if (!cell) return null;
 
         return rosterDB.shifts.find(
             shift => cell.classList.contains(shift.shiftNo)
         ) || null;
     }
 
-
- 
-
     function getPreviousShift(employeeIndex, weekIndex, dayIndex) {
-
         let previousTable;
         let previousDayIndex;
 
-
         if (dayIndex > 0) {
-
             previousTable = tables[weekIndex];
             previousDayIndex = dayIndex - 1;
-
-        }
-
-  
-
-        else if (weekIndex > 0) {
-
+        } else if (weekIndex > 0) {
             previousTable = tables[weekIndex - 1];
             previousDayIndex = 6;
-
-        }
-
-
-        else {
-
+        } else {
             return null;
         }
-
 
         const rowIndex = employeeIndex + 2;
-
         const row = previousTable?.rows[rowIndex];
 
-        if (!row) {
-            return null;
-        }
+        if (!row) return null;
 
         const cellIndex = previousDayIndex + 2;
-
         const cell = row.cells[cellIndex];
 
-        if (!cell) {
-            return null;
-        }
+        if (!cell) return null;
 
         return getShiftFromCell(cell);
     }
 
- 
     function isShiftOrderAllowed(previousShift, newShift) {
+        if (!previousShift || !newShift) return true;
 
-        if (!previousShift || !newShift) {
-            return true;
-        }
-
-        const unallowed =
-            rosterDB?.unAllowedShiftOrder || [];
+        const unallowed = rosterDB?.unAllowedShiftOrder || [];
 
         if (!Array.isArray(unallowed) || !unallowed.length) {
             return true;
         }
 
-        const order =
-            `${previousShift.shift} > ${newShift.shift}`;
+        const order = `${previousShift.shift} > ${newShift.shift}`;
 
         return !unallowed.includes(order);
     }
 
-
- 
- 
-
     function assignShift(cell, shift) {
-
         for (const { shiftNo } of rosterDB.shifts) {
             cell.classList.remove(shiftNo);
         }
 
         cell.classList.add(shift.shiftNo);
-
         cell.textContent = shift.shift;
-
-        cell.style.background =
-            shift.shiftColor || "";
-
-        cell.style.color =
-            shift.fontColor || "#000";
+        cell.style.background = shift.shiftColor || "";
+        cell.style.color = shift.fontColor || "#000";
     }
 
-
-
     tables.forEach((table, weekIndex) => {
-
-        
-      
-
         for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-
-    
 
             if (
                 weekIndex === 0 &&
@@ -1673,7 +1617,6 @@ function rosterPeople() {
                 continue;
             }
 
-
             if (
                 weekIndex === rosterConfig.totWeeksShown - 1 &&
                 dayIndex > Number(rosterConfig.lastCellNum) - 1
@@ -1681,208 +1624,148 @@ function rosterPeople() {
                 continue;
             }
 
-
-            const cellIndex = dayIndex + 2
-       
-
-            const randomEmployees = shuffle(rosterDB.employees)
-       
-
+            const cellIndex = dayIndex + 2;
+            const randomEmployees = shuffle(rosterDB.employees);
             const remaining = new Map();
 
             for (const shift of nonFixedShifts) {
-
                 remaining.set(
                     shift.shiftNo,
-                    getMaximum(
-                        shift,
-                        dayIndex,
-                        weekIndex
-                    )
+                    getMaximum(shift, dayIndex, weekIndex)
                 );
             }
 
-
             for (const employee of randomEmployees) {
+                const employeeIndex = rosterDB.employees.indexOf(employee);
 
-                const employeeIndex =
-                    rosterDB.employees.indexOf(employee);
+                if (employeeIndex === -1) continue;
 
-                if (employeeIndex === -1) {
+        
+                if (
+                    employeeShiftCounts.get(employeeIndex) >=
+                    maxShiftsPerEmployee
+                ) {
                     continue;
                 }
 
+                const rowIndex = employeeIndex + 2;
+                const row = table.rows[rowIndex];
 
-                const rowIndex =
-                    employeeIndex + 2;
+                if (!row) continue;
 
-                const row =
-                    table.rows[rowIndex];
+                const cell = row.cells[cellIndex];
 
-                if (!row) {
-                    continue;
-                }
+                if (!cell) continue;
 
-
-                const cell =
-                    row.cells[cellIndex];
-
-                if (!cell) {
-                    continue;
-                }
-
-
-
-                const hasFixedShift =
-                    rosterDB.shifts.some(shift =>
-                        shift.isNonFixedShift !== true &&
-                        cell.classList.contains(shift.shiftNo)
-                    );
-
-                if (hasFixedShift) {
-                    continue;
-                }
-
-
-       
-
-                if (cell.textContent.trim() !== "OFF") {
-                    continue;
-                }
-
-
-                const allowed =
-                    getAllowedShifts(
-                        employee,
-                        weekIndex,
-                        dayIndex
-                    );
-
-                const previousShift =
-                    getPreviousShift(
-                        employeeIndex,
-                        weekIndex,
-                        dayIndex
-                    );
-
-
-         
-                // Only shifts with available capacity
-             
-                let available =
-                    allowed.filter(shift =>
-                        (remaining.get(shift.shiftNo) ?? 0) > 0
-                    );
-
-
-
-                available =
-                    available.filter(newShift =>
-                        isShiftOrderAllowed(
-                            previousShift,
-                            newShift
-                        )
-                    );
-
-
-                if (!available.length) {
-                    continue;
-                }
-
-
-           
-                // Randomly select valid shift
-          
-
-                const selectedShift =
-                    available[
-                        Math.floor(
-                            Math.random() *
-                            available.length
-                        )
-                    ];
-
- 
-                // Assign shift
-           
-
-                assignShift(
-                    cell,
-                    selectedShift
+                const hasFixedShift = rosterDB.shifts.some(shift =>
+                    shift.isNonFixedShift !== true &&
+                    cell.classList.contains(shift.shiftNo)
                 );
 
- 
-                // Decrease remaining capacity
-            
+                if (hasFixedShift) continue;
+
+                if (cell.textContent.trim() !== "OFF") continue;
+
+                const allowed = getAllowedShifts(
+                    employee,
+                    weekIndex,
+                    dayIndex
+                );
+
+                const previousShift = getPreviousShift(
+                    employeeIndex,
+                    weekIndex,
+                    dayIndex
+                );
+
+                let available = allowed.filter(
+                    shift => (remaining.get(shift.shiftNo) ?? 0) > 0
+                );
+
+                available = available.filter(newShift =>
+                    isShiftOrderAllowed(previousShift, newShift)
+                );
+
+                if (!available.length) continue;
+
+                const selectedShift = available[
+                    Math.floor(Math.random() * available.length)
+                ];
+
+        
+                if (
+                    employeeShiftCounts.get(employeeIndex) >=
+                    maxShiftsPerEmployee
+                ) {
+                    continue;
+                }
+
+                assignShift(cell, selectedShift);
+
+                employeeShiftCounts.set(
+                    employeeIndex,
+                    employeeShiftCounts.get(employeeIndex) + 1
+                );
 
                 remaining.set(
                     selectedShift.shiftNo,
                     remaining.get(selectedShift.shiftNo) - 1
                 );
-
             }
-
         }
-
     });
 
-
-   getEmployeesTotalHrs()
+    getEmployeesTotalHrs();
 }
+
+
 getElem("#other").addEventListener("click", clearShiftsBlocks)
+
 
 function clearShiftsBlocks() {
     if (!rosterDB?.shifts?.length) return;
 
-    const tables = [...getElems(".week-roster")];
-    if (!tables.length) return;
+    const tables = [...getElems(".week-roster")]
+    if (!tables.length) return
 
-    const nonFixedShifts = rosterDB.shifts.filter(
-        shift => shift.isNonFixedShift === true
-    );
+    const shiftNos = rosterDB.shifts.map(shift => shift.shiftNo)
 
-    const startDay = Math.max(
-        0,
-        Number(rosterConfig.startCellNum || 1) - 1
-    );
+    const startDay = Math.max( 0, Number(rosterConfig.startCellNum || 1) - 1 )
 
-    const lastDay = Math.min(
-        6,
-        Number(rosterConfig.lastCellNum || 7) - 1
-    );
+    const lastDay = Math.min(6, Number(rosterConfig.lastCellNum || 7) - 1 )
 
     tables.forEach((table, weekIndex) => {
         for (let rowIndex = 2; rowIndex < table.rows.length; rowIndex++) {
-            const row = table.rows[rowIndex];
-           
-          
+            const row = table.rows[rowIndex]
+
             for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-                if (weekIndex === 0 && dayIndex < startDay) continue;
+                if (weekIndex === 0 && dayIndex < startDay) continue
 
-                if (
-                    weekIndex === tables.length - 1 &&
-                    dayIndex > lastDay
-                ) continue;
+                if ( weekIndex === tables.length - 1 && dayIndex > lastDay
+                ) continue
 
-                const cell = row.cells[dayIndex + 2];
-                if (!cell) continue;
+                const cell = row.cells[dayIndex + 2]
+                if (!cell) continue
 
-                const assignedShift = nonFixedShifts.find(
-                    shift => cell.classList.contains(shift.shiftNo)
-                );
+             
+                const hasShift = shiftNos.some(shiftNo =>
+                    cell.classList.contains(shiftNo)
+                )
 
-                // Keep fixed shifts and unrelated cell content unchanged.
-                if (!assignedShift) continue;
+                if (!hasShift) continue
 
-                cell.textContent = "OFF";
-                cell.style.background = "rgb(65, 221, 125)";
-                cell.style.color = "#000";
-                cell.style.cursor = "";
+             
+                shiftNos.forEach(shiftNo => {
+                    cell.classList.remove(shiftNo)
+                })
 
-                cell.classList.remove(assignedShift.shiftNo);
+                cell.textContent = "OFF"
+                cell.style.background = "rgb(65, 221, 125)"
+                cell.style.color = "#000"
+                cell.style.cursor = ""
             }
         }
-    });
+    })
 }
 
  
@@ -2140,7 +2023,7 @@ function getSettingOpenAction(event) {
 
 
       case "Version":
-        alert("                                               Version 3.1.1")
+        alert("                                               Version 3.3.0")
         break
          case "Shift Repeats":
             alert("Not added yet")
@@ -2638,6 +2521,10 @@ function restoreShiftTemplates(pos) {
 
 
 function showFormulas() {
+
+  
+
+   const tdCols = getElems(".week-roster:first-child tr:first-child th")
    getElems(".week-roster .row-number").forEach( (rowNo, rowID)=>{
        const tdNum =  rowNo.value
        const target = rowNo.parentElement.parentElement.children[9]
@@ -2651,7 +2538,7 @@ function showFormulas() {
 
 
   let cellPos = ``
-  const tdCols = getElems(".week-roster:first-child tr:first-child th")
+ 
   if ( tableIndex == 0 ) {
 
     cellPos = `${tdCols[rosterConfig.startCellNum+1].textContent}${tdNum}:H${tdNum}`
@@ -2673,12 +2560,10 @@ function showFormulas() {
    for(let shift of shifts)
       formula+=`+countif(${cellNum}${delim.textContent}"${shift}")`
 
- 
+   target.textContent = `=(${formula.replace('+','')})*${hr}`
 
 
-    target.textContent = `=(${formula.replace('+','')})*${hr}`
   })
-
 
   //////////////////////////
  
@@ -2686,22 +2571,19 @@ function showFormulas() {
 
     const rows = [...table.rows]
 
- 
-
     rows.forEach( (row, rowPos) => {
        if (rowPos < 2) return
         const cellFormula = row.cells[0].children[0].value
 
         const totWkHr = getElems(`#total-hours-tb tr`)
         totWkHr[rowPos].cells[tableIndex+1].textContent = '=I'+cellFormula
-
-   
-
         
     })
-    
+
     
   })
+
+  
   getElems(`#total-hours-tb tr`).forEach( (row, rowId )=>{
 
     if (rowId < 2) return
@@ -2711,15 +2593,109 @@ function showFormulas() {
 
   })
 
-/*//////////
-getElems("#yellow-table tr td")
-.forEach(cell=>showYellowTableFormula(cell))
+  ////////////////////////// Yellow table //////////////////////////////////
 
-*/
+  const yellowThCols = [...getElems("#yellow-table tr:nth-child(2) th")]
+  .map( th =>th.textContent)
+
+  
+  for(let pos = 1 ; pos <yellowThCols.length; pos++  ) {
+    
+  for(let e = 3; e < rosterDB.employees.length + 3; e++ ) {
+
+    
+    
+    let formula = ""
+    const rows = getElems(`.week-roster tr:nth-child(${e})`)
+    
+
+     rows.forEach( (row, rowId) => {
+       const rowNum = row.cells[0].children[0].value
+       formula +=''
+      const tableIndex = [...getElems(".week-roster")].findIndex( tb => tb.contains(row))
+      let wk1startchar = "B"
+      let lastwkstartchar = "H"
+
+      
+      if (tableIndex === 0) {
+          wk1startchar = tdCols[rosterConfig.startCellNum + 1].textContent
+        }
+
+      if (tableIndex === rosterConfig.totWeeksShown -1) {
+           lastwkstartchar = tdCols[rosterConfig.lastCellNum + 1].textContent
+      }
+        
+      if (tableIndex > rosterConfig.totWeeksShown - 1) return
+
+      const cells = [...row.cells]
+
+      switch(yellowThCols[pos].toLowerCase()){
+        case "of":
+
+        break;
+        case "sat":
+             formula += `+countifs(G${rowNum}${delim.textContent} "<>off"${delim.textContent} G${rowNum}${delim.textContent} "<>")`
+          break
+          case "sun":
+        
+            formula += `+countifs(H${rowNum}${delim.textContent} "<>off"${delim.textContent} H${rowNum}${delim.textContent} "<>")`
+
+          break
+          case "no of shifts":
+
+            for(let shift of rosterDB.shifts.map(({shift})=>shift)) {
+              
+              formula += `+COUNTIF(${wk1startchar}${rowNum}:${lastwkstartchar}${rowNum}${delim.textContent}"${shift}")`
 
 
+            }
+
+
+
+
+        break
+
+        default:
+
+          formula += `+COUNTIF(${wk1startchar}${rowNum}:${lastwkstartchar}${rowNum}${delim.textContent}"${yellowThCols[pos]}")`
+      
+        }
+
+
+
+
+      
+
+  
+
+     })
+    
+
+     
+
+     const rowTd = getElem(`#yellow-table tr:nth-child(${e}) td:nth-child(${pos+1})`)
+     
+     if (rowTd) 
+      rowTd.textContent = formula.replace("+", "=")
+    
+
+  }
+  
+}
+
+  
 
 }
+
+
+
+
+function getEmpRowformula(rowNum) {
+
+  
+  
+}
+
 /////////////////////////////////////
 
 getElem("#shift-values-box").addEventListener("mousedown",moveShiftTempBox )
@@ -3278,41 +3254,9 @@ function getEmployeesTotalHrs() {
   const empLen = rosterDB.employees.length 
   const shiftLen = rosterDB.shifts.length 
 
-
-
-  
-  for(let e = 3; e <=empLen+2; e++) {
-
-    const sats =  [...getElems(`.week-roster tr:nth-child(${e}) td:nth-child(8)`)]
-    .filter( sat => shifts.includes(sat.textContent))
-
-    const satPos = shiftLen + 3
-    const empSat = getElem(`#yellow-table tr:nth-child(${e}) td:nth-child(${satPos})`)
-    if ( !empSat ) return
-
-    empSat.textContent = sats.length
-
-       
-  }
-
-  for(let e = 3; e <=empLen+2; e++) {
-
-    const suns =  [...getElems(`.week-roster tr:nth-child(${e}) td:nth-child(9)`)]
-    .filter( sun => shifts.includes(sun.textContent))
-
-    const sunsPos = shiftLen + 4
-    const empSun = getElem(`#yellow-table tr:nth-child(${e}) td:nth-child(${sunsPos})`)
-    if ( !empSun ) return
-
-    empSun.textContent = suns.length
-
-       
-  }
-
-
-
-
  
+ 
+
  const weekTables = getElems(".week-roster");
  const yellowTable = getElem("#yellow-table");
  
@@ -3395,56 +3339,170 @@ employees.forEach((emp, empIndex) => {
     }
 
 
-    let totalShiftCount = 0;
 
-    shifts.forEach((shiftName, shiftIndex) => {
 
-        const count = rowShifts.filter( shift => shift === shiftName).length;
-
-    const cell = yellowTable.rows[startIndex].cells[shiftIndex + 1];
-
-        if (cell) cell.textContent = count;
-        
-
-        totalShiftCount += count;
-    });
 
     
+  
 
-    const cells = yellowTable.rows[startIndex].cells;
-    const offCell = cells[cells.length-2]
-    offCell.textContent = rowShifts.filter(shift => shift === "OFF").length
-
-    const lastCell = cells[cells.length - 1];
-
-    lastCell.textContent = totalShiftCount;
-
-
-
-    updateShiftAllowance(emp, rowShifts)
+  
+  
 
 });
 
-function updateShiftAllowance(employee, rowShifts) {
+
+  const yellowThCols = [...getElems("#yellow-table tr:nth-child(2) th")].map(th=> th.textContent)
+  
+
+  for(let e = 3; e < rosterDB.employees.length + 3; e++) {
+
+  
+  yellowThCols.forEach((th, thIndex)=>{
+
+      if ( thIndex === 0 ) return
 
 
-  const allowanceShifts = rosterDB.shifts.filter(({allowance})=> allowance)
-                         .map(({shift})=> shift ) 
-  const allowanceCount = rowShifts.filter( shift => allowanceShifts.includes(shift)).length 
+     const rows = getElems(`.week-roster tr:nth-child(${e})`)
 
-    const totalHoursTable = getElem("#total-hours-tb")
-    const allowRowLen = getElem("#allowanceTb").rows.length
-    const sumCell = totalHoursTable.rows[1+allowRowLen].cells[7].textContent
+      let totCount = 0
+      let formula = ""
+     rows.forEach((row, rowID) => {
+
+        const tableIndex = [...tables].findIndex(th=>th.contains(row))
+
+
+        if (tableIndex > rosterConfig.totWeeksShown - 1) return
+
+         const cells = [...row.cells]
+         const rowNum = cells[0].children[0].value 
+
+
+        cells.forEach( (cell, cellPos) => {
+
+            if (cellPos <= rosterConfig.startCellNum && tableIndex === 0) return
+            if (cellPos > rosterConfig.lastCellNum + 1  && tableIndex === rosterConfig.totWeeksShown - 1) return
+
+
+            if (th.toLowerCase() === "sun" || th.toLowerCase() ==="sat") {
+
+                return
+            }
+        
+            if ( th.toLowerCase() ==="no of shifts") {
+
+              formula += cell.textContent.trim()
+
+              return
+            }
+            if (cell.textContent.toLowerCase() === th.toLowerCase()) 
+                totCount++
+
+       
+
+         
+        })
+
+        
+        
+         if (th.toLowerCase() ==="sat") {
+                
+             if (cells[7].textContent.toLowerCase() !== "off")
+              totCount++
+
+
+            }
+        
+        if (th.toLowerCase() === "sun") {
+                
+             if (cells[8].textContent.toLowerCase() !== "off")
+              totCount++
+
+
+            }
+
+      if (th.toLowerCase() ==="no of shifts") {
+
+        const nonFixedShift = rosterDB.shifts.filter(({isNonFixedShift} )=> isNonFixedShift)
+        .map( ({shift})=>shift)
+
+        totCount = 0
+
+        nonFixedShift.forEach( shift => {
+          
+          const regExp = new RegExp(shift,"gi")
+          totCount += (formula.match(regExp, formula) || []).length
+          
+        })
+         
+       }
+        
+        
+
+
+        
+   
+     
+     })
+
     
+    
+    getElem(`#yellow-table tr:nth-child(${e}) td:nth-child(${thIndex+1})`).textContent = totCount
+    
+    
+    
+    
+    
+  })
+}
 
-   allowanceTb.innerHTML += 
-   `<tr>
-      <td class="employee-name">${employee}</td>
-      <td style="text-align:center">${sumCell}</td>
-      <td>${allowanceCount}</td>
-    </tr>`
+
+//updateShiftAllowance()
+
+function updateShiftAllowance() {
+  const emps = rosterDB.employees.map(({employee})=>employee)
+  
+
+  let totCount = 0 
+const allowsShifts = rosterDB.shifts.filter(({allowance})=>allowance === true)
+.map(({shift})=> shift.toLowerCase() )
+
+formulaResult.value += allowsShifts + ''
+
+emps.forEach( (emp, empPos) => {
+
+  const wkRowPos = empPos+3
+
+  const rows = getElems(`.week-roster tr:nth-child(${wkRowPos})`)
+  rows.forEach((row, rowPos) => {
+      const tableIndex = [...tables].findIndex(th=>th.contains(row))
+      const cells = [row.cells]
+
+      cells.forEach( (cell, cellPos)=> {
+
+        if (cellPos <= rosterConfig.startCellNum && tableIndex === 0) return
+        if (cellPos > rosterConfig.lastCellNum + 1  && tableIndex === rosterConfig.totWeeksShown - 1) return
+
+
+        totCount++ 
+
+
+      })
+
+  })
+
+
+  allowanceTb.innerHTML += 
+  `<tr>
+  <td class="employee-name">${emp}</td>
+  <td style="text-align:center">0</td>
+  <td>${totCount}</td>
+  </tr>`
+  
+})
 
 }
+
+
 }
 
  
@@ -4008,6 +4066,7 @@ if (rosterDB.shifts && rosterDB.employees) {
    
  
  
+
 
     
 
