@@ -481,7 +481,10 @@ textarea {
   text-align: center;
 
   text-transform: capitalize;
-  padding: 0 10px
+  padding: 0 10px;
+  word-break: break-all;
+  white-space:wrap;
+
 
  
   
@@ -905,12 +908,20 @@ div:has(.close-btn) {
    left: 5px;
    background:rgb(242, 186, 55);
 }
-#selected-month{
+#balance-shifts{
   top: 5px;
   left: 70px;
-  background:rgb(17, 228, 176);
+  background:#000;
   cursor:none;
+  text-align: center;
+  color:#fff;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
 }
+
+
 #next-month {
   left: 135px;
   top: -110px;
@@ -924,9 +935,16 @@ div:has(.close-btn) {
 #other {
     top: -105px;
     left: 75px;
-    background: rgb(246, 93, 134);
+    background: rgb(214, 6, 61);
+    color: #fff;
 }
+#balance-shifts>span {
+  text-align: center;
+  color: rgb(232, 31, 55);
+  
+  font-weight: bolder;
 
+}
 #unallowed-shift-order-box {
   position: absolute;  
   background: #b6ca8b;
@@ -1121,4 +1139,9 @@ div:has(#total-shifts-per-employee) {
 
 #shift_template_name {
   width: 100%;;
+}
+
+#updates h4{
+  color:rgb(231, 14, 14);
+
 }
