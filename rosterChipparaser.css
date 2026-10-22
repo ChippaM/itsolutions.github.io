@@ -1152,6 +1152,7 @@ div:has(#total-shifts-per-employee) {
 
   width:100vw;
   height: 100vh;
+  display: none;
 }
 #timesheet table {
   border:2px solid;
