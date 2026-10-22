@@ -164,6 +164,7 @@
             </ul>
 
           </li>
+           <li>Get Timesheet</li>
           <li>Delete Settings</li>
           <li>Export Settings</li>
           <li>Import Settings</li>
@@ -179,6 +180,7 @@
       <li id="hide-input-output">Hide Input/Output</li>
       <li>Manually Add Shifts</li>
       <li id="add-shift-template">Save Draft CheckPoint</li>
+     
       <li>Disable Overflow</li>
       <li id="hide-show-icons-label">Show Side Icons</li>
       <li>Copy Text</li>
@@ -361,7 +363,7 @@
 
   <label>Template Name <input type="text" id="template-name" maxlength="50"> <span>Reset</span></label><br>
   <div>
-    <label>How many shifts one employee is expected to work per month : 
+    <label>How many days is each employee expected to work per month?
      <input type="number" value="20" min="10" 
         max="28" required id="total-shifts-per-employee"
          maxlength="50">
@@ -412,6 +414,350 @@
    
     </section>  
 
+
+  </section>
+
+  <section id="timesheet">
+   <div>
+     <span id="close-timesheet" class="close-btn">X</span>
+
+   </div>
+    <table id="timesheet-table">
+      <tr>
+        <th colspan="10"><h2>Blue Ocean Time Sheet & Allowance Claim Form</h2></th>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>V1.0</td>
+
+
+      </tr>
+      <tr>
+        <td></td>
+        <td class="right boldness">Engineer Name:</td>
+        <td colspan="2">
+          <select id="timesheet-emp-name"></select>
+          
+        </td>
+       
+        <td></td>
+        <td class="boldness">Total Hours</td>
+        
+        <td class="center">180</td>
+        <td class="center">0</td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+        <tr>
+        <td></td>
+        <td class="right boldness">Engineer Signature:</td>
+        <td colspan="2"></td>
+        <td></td>
+        
+        <td class="boldness">Overtime</td>
+        <td class="center">0</td>
+        <td></td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+         <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>.</td>
+
+
+      </tr>
+         <tr>
+        <td></td>
+        <td class="boldness">Month</td>
+        <td colspan="2" id="timesheet-month" class="center boldness"></td>
+      
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+        
+         <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>.</td>
+
+
+      </tr>
+      <tr id="before-non-fixed-shifts">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td class="center boldness">Times</td>
+        <td class="center boldness">Hours</td>
+        
+        <td class="center boldness">Allowance shift</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+   
+
+      </tr>
+ 
+      </tr>
+     
+
+      </tr>
+         <tr id="timesheet-header2">
+        <td></td>
+        <td>Date</td>
+        <td><span class="up-side">Start time</span></td>
+        <td class="upSide"><span class="up-side">End time</span></td>
+        <td>Shift Worked</td>
+        
+        <td>Shift type</td>
+        <td>Hours worked (ex Breaks)</td>
+        <td>Allowance shift</td>
+        <td>Public Holiday?</td>
+        <td>Comments</td>
+
+
+      </tr>
+      <tr class="total-count-row">
+      
+        <td colspan="2" class="center bolder"><h2>Total</h2></td>
+        <td></td>
+        <td id="totalShifts"></td>
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+        <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td>.</td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+        <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td>.</td>
+        <td></td>
+        <td></td>
+
+
+      </tr class="center bolder">
+        <tr>
+        <td></td>
+        <td></td>
+        <td class="center boldness">Area</td>
+        <td class="center boldness">Total</td>
+        <td class="center boldness">Rate</td>
+        
+        <td class="center boldness">Hours</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+        <tr>
+        <td></td>
+        <td></td>
+        <td>Allawance shifts</td>
+        <td id="timesheet-total-allowance" class="center">13</td>
+        <td id="timesheet-allawance-rate" class="center">200</td>
+        
+        <td id="timesheet-allawance-Hours" class="center">-</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+            <tr>
+        <td></td>
+        <td></td>
+        <td>Sunday</td>
+        <td id="timesheet-sunday-total" class="center">0</td>
+        <td id="timesheet-sunday-hours" class="center">0.5</td>
+        
+        <td id="timesheet-Hours" class="center">-</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+            <tr>
+        <td></td>
+        <td></td>
+        <td>Public Holidays</td>
+        <td id="timesheet-holiday-total" class="center">0</td>
+        <td id="timesheet-holiday-hours" class="center">0.5</td>
+        
+        <td id="timesheet-holiday-Hours" class="center">-</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+            <tr>
+        <td></td>
+        <td></td>
+        <td>Overtime</td>
+        <td id="timesheet-overtime-total" class="center">-</td>
+        <td id="timesheet-overtime-hours" class="center">1.5</td>
+        
+        <td id="timesheet-overtime-Hours" class="center">0</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+             <tr>
+        <td></td>
+        <td></td>
+        <td>Total shifts</td>
+        <td id="timesheet-total-shifts" class="center">-</td>
+        <td id="timesheet-total-shifts-rate" class="center">1</td>
+        
+        <td id="timesheet-total-shifts-hours" class="center">180</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+       <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td>.</td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+       <tr>
+        <td></td>
+        <td class="boldness">First Approver:</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td class="boldness">Date</td>
+        <td></td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+            <tr>
+        <td></td>
+        <td class="boldness">Second Approver:</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td class="boldness">Date</td>
+        <td>.</td>
+        <td></td>
+        <td></td>
+
+
+      </tr>
+            <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>.</td>
+
+
+      </tr>
+            <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>. </td>
+
+
+      </tr>
+    </table>
 
   </section>
 
