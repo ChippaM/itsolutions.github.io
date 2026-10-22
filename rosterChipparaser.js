@@ -4643,7 +4643,7 @@ getElem("#upload-new-btn").addEventListener("click", importDB)
 if (rosterDB.shifts && rosterDB.employees) {
 
     runAfterPassedValidation()
-   formulaResult.value = JSON.stringify(rosterConfig)
+ 
  
  
 
