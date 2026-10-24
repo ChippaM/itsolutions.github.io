@@ -545,6 +545,15 @@ function autoAddEmptyRows(event) {
 
 
 
+    getElems(".week-roster").forEach( (table, tableIndex)=>{
+
+       if(tableIndex < rosterConfig.totWeeksShown - 1) return 
+         table.style.display = "none"
+    })
+    
+
+
+
     setTimeout(()=> {
          getElem(".week-roster tr").style.display = ""
 
@@ -552,7 +561,14 @@ function autoAddEmptyRows(event) {
     .forEach(td => td.style.display = "")
     getElem("#total-hours-tb tr").style.display = ""
     getElem("#yellow-table tr").style.display = ""
-      getEmployeesTotalHrs()
+    
+      getElems(".week-roster").forEach( (table, tableIndex)=>{
+
+       if(tableIndex < rosterConfig.totWeeksShown - 1) return 
+         table.style.display = ""
+    })
+    
+    getEmployeesTotalHrs()
 
     },0)
    
@@ -1507,22 +1523,22 @@ function rosterPeople() {
 
         const weekObj = employee.workdays.find(
             obj => Array.isArray(obj?.[weekKey])
-        );
+        )
 
         if (!weekObj) {
-            return nonFixedShifts;
+            return nonFixedShifts
         }
 
         const allowedShiftNos =
-            weekObj[weekKey]?.[dayIndex];
+            weekObj[weekKey]?.[dayIndex]
 
         if (!Array.isArray(allowedShiftNos)) {
-            return nonFixedShifts;
+            return nonFixedShifts
         }
 
         return nonFixedShifts.filter(
             shift => allowedShiftNos.includes(shift.shiftNo)
-        );
+        )
     }
 
  
@@ -1649,12 +1665,9 @@ function rosterPeople() {
 
     tables.forEach((table, weekIndex) => {
 
-        
-      
 
         for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
 
-    
 
             if (
                 weekIndex === 0 &&
