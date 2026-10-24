@@ -414,8 +414,35 @@ if (empl.length === 0) {
 }
 
 
+
+
 shiftValue.value = shiftData.join("\n")
 
+for(let emp of empl) {
+   if (/\d/g.test(emp)) {
+      alert("Employee names cannot include numbers")
+        return
+    
+   }
+
+     if (empl.indexOf(emp) !== empl.lastIndexOf(emp)) {
+      alert(`${emp} has a duplicate. Remove one.`)
+        return
+    
+   }
+}
+
+const a_shifts = new Set(shiftData.map(name =>name.toLowerCase()))
+const a_emp = new Set(empl.map(name =>name.toLowerCase()))
+
+const commonValues = Array.from(a_shifts.intersection(a_emp))
+
+ 
+
+if (commonValues.length) {
+  alert(`${commonValues} cannot be shift and employee name. Check your inputs.`)
+    return
+}
 
 const shiftList = shiftData.map((shift, index) => {
     return {
@@ -2709,26 +2736,49 @@ function shiftTemplatesValues(event) {
     const selectMonths = getElem("#template-month")
     const shiftTemplate = getElem("#shift_template")
     const shiftTemplateInp = getElem("#shift_template_name")
+    const id = shiftTemplate.options.selectedIndex || 0
 
   switch(target.textContent) {
     case "Delete All":
      selectMonths.options.length = 0
      shiftTemplate.options.length = 0
     break;
-    case "Clear" :
-       shiftTemplate.options.length = 0
+ 
+    case "Rename":
+       rosterDB.shiftTemplates[id].templateName =   shiftTemplateInp.value
+       shiftTemplate.options[id].value = shiftTemplateInp.value
+       shiftTemplate.options[id].textContent = shiftTemplateInp.value
+    break
+    case "Delete":
+     rosterDB.shiftTemplates.splice(id, 1)
+     shiftTemplate.options[id].remove()
+
+    break
+
+    case "Save":
+      saveSettings()
+    break
+
+    case "Clear":
+         rosterDB.shiftTemplates.length = 0
+         shiftTemplate.options.length = 0 
+        alert( rosterDB.shiftTemplates.length)
+
     break
     default:
       if(
         target.tagName === "BUTTON" ||
         target.tagName === "P" ||
         target.tagName === "H3" ||
-        target.tagName === "SPAN"
+        target.tagName === "SPAN" ||
+        target.tagName === "SELECT" ||
+        target.tagName === "DIV" 
+        || target.tagName === "INPUT" 
         
         
       ) return
     
-      const id = shiftTemplate.options.selectedIndex || 0
+   
     
       restoreShiftTemplates(id)
 
@@ -2958,7 +3008,11 @@ function showFormulas() {
      })
 
      row.cells[1].textContent = formula.replace("+", "=")
+     row.cells[1].dataset.formula = formula.replace("+", "=")
+    
+     
      row.cells[2].textContent = allowFormula.replace("+", "=")
+     row.cells[2].dataset.formula = allowFormula.replace("+", "=")
 
 
   }) 
@@ -3072,6 +3126,12 @@ function showFormulas() {
 
 
 
+
+ function getAllowanceFormula(event) {
+ 
+ 
+
+ }
  
 
 /////////////////////////////////////
@@ -3864,7 +3924,7 @@ rosterDB.employees.forEach( ({employee},empPos) => {
 
   })
 
-  const newRow = `<tr><td class="employee-name">${employee}</td><td>${totShiftsCount*hours.value}</td><td>${allowanceCount}</td></tr>`
+  const newRow = `<tr><td class="employee-name">${employee}</td><td data-formula="">${totShiftsCount*hours.value}</td><td data-formula="">${allowanceCount}</td></tr>`
   allowanceTb.insertAdjacentHTML("beforeend", newRow) 
 
 
@@ -3875,7 +3935,7 @@ rosterDB.employees.forEach( ({employee},empPos) => {
 
 }
 
-
+ getElem("#allowanceTb").addEventListener("click", getAllowanceFormula)
 
 }
 
@@ -4405,18 +4465,47 @@ if (
           return
        }
  
-       
-       const len = templateList.options.length
-       const newSettTemp = new Option(templateInp.value,templateInp.value )
-       templateList.options[len] = newSettTemp
-       
-      rosterDB.settingName = templateInp.value
-      rosterDB.settingID = Date.now()
-      sessionData.currentSetting = rosterDB
 
-      database.settings.push(rosterDB)
-      database.index = database.settings.length - 1
-      sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
+ 
+ 
+if (!Array.isArray(database.settings)) {
+    database.settings = [];
+}
+
+if (!rosterDB || !templateInp.value.trim()) {
+    console.error("Roster data or setting name is missing.");
+    return;
+}
+
+ 
+const newSetting = {
+    ...structuredClone(rosterDB),
+    settingID: Date.now(),
+    settingName: templateInp.value.trim()
+};
+
+ 
+database.settings.push(newSetting);
+
+const len = database.settings.length - 1;
+
+ 
+const newSettTemp = new Option(
+    newSetting.settingName,
+    String(newSetting.settingID)
+);
+
+templateList.add(newSettTemp);
+
+ 
+sessionData.currentSetting = newSetting;
+database.index = len;
+
+ 
+sessionStorage.setItem(
+    "rosterSession",
+    JSON.stringify(sessionData)
+)
       
 
       break
@@ -4488,14 +4577,7 @@ if (
         
          saveSettings()
       break
-      
-      case "Clear Templates":
-        templateList.options.length = 0
-      break
     
-      case "Generate Random Template":
-        alert("Not added yet")
-      break
    
        case "X":
         getElem("#shift-template-box").style.display = "none"
