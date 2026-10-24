@@ -126,6 +126,7 @@
     margin-left: 5px;
 
     width: 10%;
+    word-break: keep-all;
   }
 
   .week-roster tr:nth-child(2) th:nth-child(10) {
@@ -482,7 +483,7 @@ textarea {
 
   text-transform: capitalize;
   padding: 0 10px;
-  word-break: break-all;
+  word-break: keep-all;
   white-space:wrap;
 
 
