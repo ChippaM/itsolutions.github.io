@@ -397,7 +397,7 @@ function cleanShifts() {
     }
  }
 
-let employeeNames = employeeValue.value
+let employeeNames = employeeValue.value.replace(/[^\p{L}\s'-]/gmu, "");
 
 if (employeeNames.trim().length === 0) {
     alert('Employee names are required')
@@ -419,8 +419,8 @@ if (empl.length === 0) {
 shiftValue.value = shiftData.join("\n")
 
 for(let emp of empl) {
-   if (/\d/g.test(emp)) {
-      alert("Employee names cannot include numbers")
+   if (!/[a-z]/ig.test(emp)) {
+      alert("Employee names can only have alphabets or underscore ( _ )")
         return
     
    }
@@ -2117,8 +2117,63 @@ function clearShiftsBlocks() {
                 cell.style.color = "#000"
                 cell.style.cursor = ""
             }
+
+            row.cells[9].textContent = 0
         }
     })
+
+
+
+  
+getElems("#total-hours-tb tr").forEach((row, rowPos)=> {
+    if (rowPos < 2) return 
+     
+    const cells = [...row.cells]
+
+    cells.forEach((cell, cellPos)=>{
+        const cellIndex = cell.cellIndex 
+
+        if (cellIndex === 0) return 
+        cell.textContent = 0 
+
+    })
+
+
+})
+
+getElems("#yellow-table tr").forEach((row, rowPos)=> {
+    if (rowPos < 2) return 
+     
+    const cells = [...row.cells]
+
+    cells.forEach((cell, cellPos)=>{
+        const cellIndex = cell.cellIndex 
+
+        if (cellIndex === 0) return 
+        cell.textContent = 0 
+
+    })
+
+
+})
+
+
+ getElems("#allowanceTb tr").forEach((row, rowPos)=> {
+    if (rowPos < 1) return 
+     
+    const cells = [...row.cells]
+
+    cells.forEach((cell, cellPos)=>{
+        const cellIndex = cell.cellIndex 
+
+        if (cellIndex === 0) return 
+        cell.textContent = 0 
+
+    })
+
+
+})
+   
 }
 
  
