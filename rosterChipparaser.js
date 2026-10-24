@@ -450,7 +450,7 @@ sessionStorage.setItem("rosterSession", JSON.stringify(sessionData))
 renderNecessaryItems()
 
 runAfterPassedValidation()
-rosterPeople()
+rosterPeopleForTotalDays()
 
 
 }
@@ -502,8 +502,9 @@ function deleteSavedDB() {
 }
 
 document.body.addEventListener("keydown", autoAddEmptyRows);
-
+ 
 function autoAddEmptyRows(event) {
+ 
   if (event.ctrlKey && event.key.toLowerCase() === "c") {
      addEmptyRowsAfterWeeks()
 
@@ -516,6 +517,7 @@ function autoAddEmptyRows(event) {
     .forEach(td => td.style.display = "none")
 
 
+
     setTimeout(()=> {
          getElem(".week-roster tr").style.display = ""
 
@@ -523,7 +525,7 @@ function autoAddEmptyRows(event) {
     .forEach(td => td.style.display = "")
     getElem("#total-hours-tb tr").style.display = ""
     getElem("#yellow-table tr").style.display = ""
-     getEmployeesTotalHrs()
+      getEmployeesTotalHrs()
 
     },0)
    
@@ -564,7 +566,7 @@ function runAfterPassedValidation() {
  updateWeekSecondRowNo()
   renderNecessaryItems()
   
-  rosterPeople()
+rosterPeopleForTotalDays()
 
 
 
@@ -850,64 +852,8 @@ getElems(".week-roster tr td:last-child").forEach( hoursTD => hoursTD.addEventLi
 
 }
 
-function addAllowanceTable() {
-
-   if (!rosterDB.employees) {
-    return 
-   }
-
-   const allowanceTb = getElem("#allowanceTb")
-
-    if (allowanceTb) {
-
-      allowanceTb.remove()
-    }
-   
-  let table = `
-  <table id="allowanceTb" onclick="getAllowanceTbFormula()">
-     <tr>
-       <th>Employee</th>
-       <th>Allowance</th>
-       <th>Total hours</th>
-     </tr>
-     
-        `
-
-    const empRows = rosterDB.employees.map(({employee})=>{
-
-      return `
-      <tr> 
-        <td class="employee-name">${employee}</td>
-        <td> 0 </td>
-        <td> 0 </td>
-      </tr>
-      `
-    }).join("")
-
-    table+= empRows + "</table>"
-
-
-    getElem("main>section:last-child").insertAdjacentHTML("beforeend", table)
-   
-
-    
-
-}
-
-
-function getAllowanceTbFormula(event) {
-
-  const target = event.target
-
- if (target.cellIndex == 0 || target.tagName === "TH") return
  
- //later
-
-
-
-}
-
-
+ 
 hours.onchange =()=> rosterDB.hours = hours.value
  
 function addYellowTable() {  
@@ -2904,8 +2850,8 @@ function restoreShiftTemplates(pos) {
     restoreShiftSettingData()
     getEmployeesTotalHrs()
 }
-
-
+ 
+ 
 function showFormulas() {
 
   
@@ -2963,12 +2909,61 @@ function showFormulas() {
 
         const totWkHr = getElems(`#total-hours-tb tr`)
         totWkHr[rowPos].cells[tableIndex+1].textContent = '=I'+cellFormula
+
+
+
+    
+   
+      
         
     })
 
     
   })
 
+
+  ////////////////////////Allowance table///////////////////////////////////
+
+  const allowShifts = rosterDB.shifts.filter(({allowance})=>allowance === true )
+  getElems("#allowanceTb tr").forEach((row, rowPos) => {
+
+    if (rowPos === 0) return
+    
+    const rows = getElems(`.week-roster tr:nth-child(${rowPos + 2})`)
+    const cells = [...row.cells]
+     let formula = ""
+     let allowFormula = ""
+     rows.forEach((trow, trowID)=>{
+
+      if (trowID > rosterConfig.totWeeksShown - 1 ) return
+        const rowNum = [...trow.cells][0].children[0].value
+        formula += `+i${rowNum}` 
+
+
+    let cellNum = `B${rowNum}:H${rowNum}`
+
+    if (trowID === 0) {
+        cellNum = `${rosterConfig.startCellChar}${rowNum}:H${rowNum}`
+      }else if (trowID === rosterConfig.totWeeksShown -1 ) {
+        
+        cellNum = `B${rowNum}:${rosterConfig.lastCellChar}${rowNum}`
+    } 
+
+    for(let allowance of allowShifts) {
+      allowFormula += `+countif(${cellNum}${delim.textContent}"${allowance.shift}")`
+
+    }
+      
+
+     })
+
+     row.cells[1].textContent = formula.replace("+", "=")
+     row.cells[2].textContent = allowFormula.replace("+", "=")
+
+
+  }) 
+
+  //////////////////////////Total hours table /////////////////////////////
   
   getElems(`#total-hours-tb tr`).forEach( (row, rowId )=>{
 
@@ -3050,8 +3045,9 @@ function showFormulas() {
 
 
 
-      
 
+
+  
   
 
      })
@@ -3076,11 +3072,7 @@ function showFormulas() {
 
 
 
-function getEmpRowformula(rowNum) {
-
-  
-  
-}
+ 
 
 /////////////////////////////////////
 
@@ -3646,17 +3638,9 @@ function getEmployeesTotalHrs() {
  const weekTables = getElems(".week-roster");
  const yellowTable = getElem("#yellow-table");
  
- if (getElem("#allowanceTb"))
-     getElem("#allowanceTb").remove()
-    
-     const tb = document.createElement("table")
-    tb.id="allowanceTb"
-    tb.innerHTML += "<tr><th>Employees</th><th>Total HR</th><th>Allowance</th></tr>"
-    getElem("#below-yellow-tb").insertAdjacentHTML('afterend', tb.outerHTML)
 
-    const allowanceTb = getElem("#allowanceTb");
 
- getElem("#allowanceTb").addEventListener("click", getAllowanceTbFormula)
+ 
 
 employees.forEach((emp, empIndex) => {
 
@@ -3832,54 +3816,65 @@ employees.forEach((emp, empIndex) => {
     
     
   })
+  updateShiftAllowance()
 }
 
 
-//updateShiftAllowance()
+
 
 function updateShiftAllowance() {
+
+  if (!rosterDB) return
+
+   if (getElem("#allowanceTb"))
+     getElem("#allowanceTb").remove()
+    
+    const tb = document.createElement("table")
+    tb.id="allowanceTb"
+    tb.innerHTML += "<tr><th>Employees</th><th>Total HR</th><th>Allowance</th></tr>"
+    getElem("#below-yellow-tb").insertAdjacentHTML('afterend', tb.outerHTML)
+
+  const allowanceTb = getElem("#allowanceTb");
   const emps = rosterDB.employees.map(({employee})=>employee)
   
 
-  let totCount = 0 
+
 const allowsShifts = rosterDB.shifts.filter(({allowance})=>allowance === true)
 .map(({shift})=> shift.toLowerCase() )
 
-formulaResult.value += allowsShifts + ''
+let empRow = ""
+rosterDB.employees.forEach( ({employee},empPos) => {
+   
+  const pos = empPos + 3
+  const rows = getElems(`.week-roster tr:nth-child(${pos})`)
+  let allowanceCount = 0 
+    let totShiftsCount = 0 
+  rows.forEach((row, rowPos)=>{ 
 
-emps.forEach( (emp, empPos) => {
+     const allCells = [...row.cells]
+     allCells.forEach((cell, cellPos) =>{
+        if (cellPos <2 || cellPos>8) return 
 
-  const wkRowPos = empPos+3
-
-  const rows = getElems(`.week-roster tr:nth-child(${wkRowPos})`)
-  rows.forEach((row, rowPos) => {
-      const tableIndex = [...tables].findIndex(th=>th.contains(row))
-      const cells = [row.cells]
-
-      cells.forEach( (cell, cellPos)=> {
-
-        if (cellPos <= rosterConfig.startCellNum && tableIndex === 0) return
-        if (cellPos > rosterConfig.lastCellNum + 1  && tableIndex === rosterConfig.totWeeksShown - 1) return
-
-
-        totCount++ 
-
-
-      })
+        if (allowsShifts.includes(cell.textContent.toLowerCase().trim())) {
+            allowanceCount++
+        }
+        if (cell.textContent.trim().toLowerCase() !== "off")
+            totShiftsCount++
+     })
 
   })
 
+  const newRow = `<tr><td class="employee-name">${employee}</td><td>${totShiftsCount*hours.value}</td><td>${allowanceCount}</td></tr>`
+  allowanceTb.insertAdjacentHTML("beforeend", newRow) 
 
-  allowanceTb.innerHTML += 
-  `<tr>
-  <td class="employee-name">${emp}</td>
-  <td style="text-align:center">0</td>
-  <td>${totCount}</td>
-  </tr>`
-  
+
 })
 
+
+
+
 }
+
 
 
 }
@@ -4636,7 +4631,7 @@ getElem(".terms-c").onclick = () =>{
 
  
 getElem("#random-shifts").addEventListener("click", rosterPeople)
-getElem("#load-shift").addEventListener("click", rosterPeople)
+getElem("#load-shift").addEventListener("click", rosterPeopleForTotalDays)
 getElem("#upload-new-btn").addEventListener("click", importDB)
 
  
