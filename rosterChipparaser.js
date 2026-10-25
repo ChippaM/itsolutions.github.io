@@ -56,7 +56,7 @@ const formulaResult = getElem("#result-formula")
 const rangeElems = getClassElem("range")
 const hourLabel = getElem("#hour-label")
  
-const timesheetEmpName = getElem("#timesheet-emp-name")
+
 const copyStatus = getElem("#copy-status")
 
 const leftShift = getElem("#leftShift")
@@ -326,7 +326,7 @@ daysID.forEach( ( id, x) => {
 })
   
 
-addTimeSheetRows()
+
 
 } 
 
@@ -822,10 +822,6 @@ function verifyMonth() {
 }
 
 
- getElem("#close-timesheet").onclick =() =>{
-
-  getElem("#timesheet").style.display = "none"
- }
 
  
 
@@ -1484,7 +1480,7 @@ function rosterPeople() {
 
     if (!nonFixedShifts.length) {
        
-        return;
+        return
     }
 
    
@@ -2300,7 +2296,7 @@ function getSettingOpenAction(event) {
            alert("Not added yet")
         break;
         case "Get Timesheet":
-          getElem("#timesheet").style.display = "block"
+          alert("Only available on unhosted version.")
         break;
       
         case "Export Settings":
@@ -4112,215 +4108,10 @@ function actionUnallowedShift(event) {
 
 }
 
-function addTimeSheetRows() {
-
-  const shiftDays = getElems(".shift-day")
-  shiftDays.forEach( day => day.remove())
-  getElems(".non-fixed-rows").forEach( row => row.remove())
 
 
-  const activeMonth = chosenMonth.textContent 
- getElem("#timesheet-month").textContent = activeMonth.replace(/[\d\s]/g, "")
-
- let nonFixedValues = [...new Set(rosterDB.shifts.filter(({isNonFixedShift})=>isNonFixedShift === true))]
-
-let rows = ""
-nonFixedValues.map(({shift, shiftNo, allowance}, rowPos)=>{
-
-   rows += `
-      <tr class="non-fixed-rows">
-        <td></td>
-        <td class="center boldness">${rowPos === 0 ? "Shift Key" : ""}</td>
-        <td>${shiftNo .replace(/s/, r=>r.toUpperCase()).replace(/\d+/, r=>" "+r)}</td>
-        <td class="center">${shift}</td>
-        <td class="center">${Number(hours.value)}</td>
-        
-        <td class="center">${allowance ? 'Yes' :'No'}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>`
-      
-    })
-    getElem("#before-non-fixed-shifts").insertAdjacentHTML("afterEnd", rows)
-
- 
 
 
- 
-
-  for( let e = 0; e <= rosterDB.employees.length; e++) {
-     
-    let empName = ''
-    if (e === 0) 
-      empName = "Select employee name"
-    else 
-      empName = rosterDB.employees[e-1].employee
-      
-    const newItem = new Option( empName, empName )
-    timesheetEmpName.options[e] = newItem
-  }
-
-  let newRow  = ""
-
-
- getElems(".activeDate").forEach( (row, rowPos) => {
-
- const date = new Date(row.textContent)
- const day = date.toLocaleDateString("en-ZA", { weekday:"long"})
- const exactDAY = date.toLocaleDateString("en-ZA", 
-  {month:"short", day:"numeric" , year:"numeric"})
-  .replaceAll(" ","-").replace(/^0/,"")
-     
- 
- 
- newRow += `
-  <tr class="shift-day">
-  <td>${day}</td>
-  <td>${exactDAY}</td>
-  <td>OFF</td>
-  <td>OFF</td>
-  <td>OFF</td>
-
-  <td>OFF</td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td contenteditable></td>
-
-  </tr>
-  `
-
-
- })
-
- getElem("#timesheet-header2").insertAdjacentHTML("afterEnd", newRow)
-
-getTimesheeForEmployee()
-
-
-}
-
-timesheetEmpName.addEventListener("change", getTimesheeForEmployee )
-
-function getTimesheeForEmployee() {
-  const selectedPos = timesheetEmpName.selectedIndex
-  if ( selectedPos === 0 ) return
-
-  const rowsPos = selectedPos + 3
-  const weeklyRows = getElems(`.week-roster tr:nth-child(${rowsPos}`)
- 
- 
- 
-  let workedShifts = []
-
-  weeklyRows.forEach((row, rowPos)=>{
-     if (rowPos >rosterConfig.totWeeksShown -1 ) return
-
-      const cells = [...row.cells] 
-
-      cells.forEach((cell, cellPos)=>{
-         if(cellPos <2 || cellPos > 8 ) return
-         if (rowPos === 0 && cellPos <= rosterConfig.startCellNum ) return
-         if (rowPos > rosterConfig.totWeeksShown - 1) return
-         if (rowPos > rosterConfig.totWeeksShown - 1 && cellPos >= rosterConfig.lastCellNum - 1) return
-
-         workedShifts.push(cell.textContent)
- 
-
-
-      })
-
-  })
-
- 
-  getElems(".shift-day").forEach((row, rowPos)=> {
-
-    let shift = workedShifts[rowPos]
-
-    if (!shift.includes("-") ) {
-      shift = shift+ " - "+ shift
-    }
-    const [startTime, endTime] = shift.split("-")
-    const shiftIndex = rosterDB.shifts.findIndex(obj =>obj.shift === shift)
-    let Shift_no = shiftIndex >= 0 ? rosterDB.shifts[shiftIndex].shiftNo : ""
-    let allawance = shiftIndex >= 0 ? rosterDB.shifts[shiftIndex].allowance : false
-    
-   
-
-  
-
-
-    if (shiftIndex >= 0 ) {
-    row.cells[2].textContent =  startTime
-    row.cells[3].textContent =  endTime
-    row.cells[4].textContent =  shiftIndex >= 0 ? Shift_no 
-    .replace(/s/, r=>r.toUpperCase())
-    .replace(/\d+/, r=>" "+r) : "OFF"
-    row.cells[6].textContent =  row.cells[2].textContent.trim()? rosterDB.hours : ""
-    row.cells[5].textContent = allawance ? "Night" : "Normal"
-    
-    row.cells[7].textContent =  allawance ? "Yes" :"No"
-    row.cells[8].textContent =  row.cells[2].textContent.trim()? rosterDB.hours : ""
-
-      if (row.cells[0].textContent.toLowerCase()=== "sunday" ) {
-        row.style.background = "pink"
-         row.cells[5].textContent = "Sunday"
-      }
-    }
-
-  })
-
-
-  getElems(".total-count-row td").forEach((cell, cellPos)=>{
-    if (cellPos === 0 ) return
-
-    const pos = 1+cellPos
-
-    const cols = [...getElems(`.shift-day td:nth-child(${pos})`)]
-    .map((ss, ssPos)=> ss.textContent)
-
-    let cellValue = ""
-    switch(cellPos) {
-      case 1:
-        cellValue = ""
-      break
-        case 2:
-        cellValue = (cols.match(/\w/ig)||[]).length
-      break
-        case 3:
-        cellValue = ""
-      break
-        case 4:
-        cellValue = ""
-      break
-        case 5:
-        cellValue = ""
-      break
-        case 6:
-        cellValue = ""
-      break
-        case 7:
-        cellValue = ""
-      break
-        case 8:
-        cellValue = ""
-      break
-        case 9:
-        cellValue = ""
-      break
-   default:
-    cellValue = ""
-      
-
-
-    }
-    cell.textContent = cellValue || 0
-  })
-
-
-}
 
 function getShift(event) {
   const target = event.target
