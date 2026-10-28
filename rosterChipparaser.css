@@ -485,13 +485,16 @@ textarea {
   padding: 0 10px;
   word-break: keep-all;
   white-space:wrap;
-
+ font-size: small;
 
  
   
   
 }
 
+textarea::placeholder {
+  color: rgb(191, 192, 190)
+}
 
 #yellow-table th:not(th:first-child):hover{
   cursor: pointer;
@@ -1145,21 +1148,6 @@ div:has(#total-shifts-per-employee) {
 #updates h4{
   color:rgb(231, 14, 14);
 
-}
-#timesheet {
-  position: absolute;
-  top:0;
-  background: #fff;
-
-  width:100vw;
-  height: 100vh;
-  display: none;
-}
-#timesheet table {
-  border:2px solid;
-  margin: 10px auto;
-  border-collapse: collapse;
-  font-family: sans-serif;
 
 }
 .center {
@@ -1168,84 +1156,4 @@ div:has(#total-shifts-per-employee) {
 .right {text-align: right;}
 .boldness {
   font-weight: bold;
-}
-#timesheet table::before {
-  content: "WORK IN PROGRESS...";
-  display: inline-block;
-  background: #f00;
-  font-weight: BOLD;
-  padding: 5px;
-  position: absolute;
-  top: 40%;
-  left: 40%;
-  border-radius: 10px;;
-  font-size: 3em;
-  transform: rotate(-40deg);
-  color:#fff;
-  padding:10px
-}
-
-#timesheet table th {
-   background: rgb(0, 176, 240);
-  height: 30px;
-  text-decoration: underline;
-  font-weight: bolder;
-  font-size: 18px;
-}
-
-#timesheet table td,
-#timesheet table th {
-  border:1px solid #000;
-  min-width: fit-content;
-  width: 50px;
-  white-space: nowrap;
-  word-break: keep-all;
-  
-}
-
-div:has(#close-timesheet) {
-  width: 90%;
-  margin: 0 auto;
-}
-#timesheet-header2 td{
-
-  text-align: center;
-  height: 60px;
-  min-width: fit-content;
-  color:#fff;
-  background: rgb(0, 176, 240);
-  font-weight: bolder;
-  padding: 20px;
- 
- 
- 
-
-}
-
-.shift-day td:not(td:first-child) {text-align: center;}
-
-.shift-day td{
-  padding-right: 10px;
-}
-
-.up-side{
-transform: rotate(-90deg);
-display: inline-block;
-  background: rgb(0, 176, 240);
- 
-
- 
-}
-#timesheet-emp-name {
-  width: 100%;
-  outline: none;
-  border: none;
-  text-align: center;
-}
-.total-count-row td {
-
-  background:  rgb(0, 176, 240);
-  color: #fff;
-  text-align: center;
-  font-weight: bolder;
 }
